@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:animated_button/animated_button.dart';
+import 'package:animated_button/state_loading_button.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
