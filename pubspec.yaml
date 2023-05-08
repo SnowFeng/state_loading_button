@@ -1,4 +1,4 @@
-name: animated_button
+name: state_loading_button
 description: 一个简单的带进度动画的按钮，可自定义各种状态样式以及动态改变进度动画样式。
 version: 0.0.1
 homepage: https://github.com/SnowFeng/animated_button.git
