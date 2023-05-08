@@ -1,4 +1,4 @@
-# animated_button
+# state_loading_button
 
 一个简单的带进度动画的按钮，可自定义各种状态样式以及动态改变进度动画样式。
 
