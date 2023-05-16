@@ -236,21 +236,19 @@ class _AnimatedButtonState extends State<AnimatedButton>
   }
 
   Widget _buildButtonWidget() {
-    return Center(
-      child: SizedBox(
-        width: _widthAnimation?.value ?? (widget.width ?? button.width),
-        height: _heightAnimation?.value ?? (widget.height ?? button.height),
-        child: CustomPaint(
-          painter: AnimatedButtonPainter(
-              buttonStatus: button.copyWith(
-                  buttonColor: Color.lerp(button.buttonColor,
-                      progress.background, _statusChangeController.value),
-                  borderRadius: _cornerAnimation?.value,
-                  borderSide: _buildBorderSide()),
-              buttonProgress: progress,
-              progress: progress.progress,
-              value: _loadingController.value),
-        ),
+    return SizedBox(
+      width: _widthAnimation?.value ?? (widget.width ?? button.width),
+      height: _heightAnimation?.value ?? (widget.height ?? button.height),
+      child: CustomPaint(
+        painter: AnimatedButtonPainter(
+            buttonStatus: button.copyWith(
+                buttonColor: Color.lerp(button.buttonColor,
+                    progress.background, _statusChangeController.value),
+                borderRadius: _cornerAnimation?.value,
+                borderSide: _buildBorderSide()),
+            buttonProgress: progress,
+            progress: progress.progress,
+            value: _loadingController.value),
       ),
     );
   }

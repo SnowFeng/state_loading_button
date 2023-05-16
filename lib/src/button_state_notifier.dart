@@ -30,6 +30,9 @@ class ButtonStateNotifier extends ChangeNotifier {
 
   void addStateChangeListener(
       void Function(String state) listener) {
+    if (_isDisposed) {
+      return;
+    }
     addListener(() {
       listener.call(_state);
     });
