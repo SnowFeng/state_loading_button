@@ -1,5 +1,5 @@
-name: animated_button_example
-description: Demonstrates how to use the animated_button plugin.
+name: state_loading_button_example
+description: Demonstrates how to use the state_loading_button plugin.
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -17,9 +17,9 @@ dependencies:
   flutter:
     sdk: flutter
 
-  animated_button:
+  state_loading_button:
     # When depending on this package from a real application you should use:
-    #   animated_button: ^x.y.z
+    #   state_loading_button: ^x.y.z
     # See https://dart.dev/tools/pub/dependencies#version-constraints
     # The example app is bundled with the plugin so we use a path dependency on
     # the parent directory to use the current plugin's version.

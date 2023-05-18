@@ -1,6 +1,6 @@
-# animated_button_example
+# state_loading_button_example
 
-Demonstrates how to use the animated_button plugin.
+Demonstrates how to use the state_loading_button plugin.
 
 ## Getting Started
 

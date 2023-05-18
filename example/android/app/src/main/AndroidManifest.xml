@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.snowfeng.animated_button.animated_button_example">
+    package="com.snowfeng.state_loading_button.state_loading_button_example">
    <application
-        android:label="animated_button_example"
+        android:label="state_loading_button_example"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

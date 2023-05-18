@@ -1,11 +1,11 @@
 {
-    "name": "animated_button_example",
-    "short_name": "animated_button_example",
+    "name": "state_loading_button_example",
+    "short_name": "state_loading_button_example",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Demonstrates how to use the animated_button plugin.",
+    "description": "Demonstrates how to use the state_loading_button plugin.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

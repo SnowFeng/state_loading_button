@@ -1,4 +1,4 @@
-package com.snowfeng.animated_button.animated_button_example
+package com.snowfeng.state_loading_button.state_loading_button_example
 
 import io.flutter.embedding.android.FlutterActivity
 

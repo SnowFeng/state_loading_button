@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.snowfeng.animated_button" "\0"
-            VALUE "FileDescription", "animated_button_example" "\0"
+            VALUE "CompanyName", "com.snowfeng.state_loading_button" "\0"
+            VALUE "FileDescription", "state_loading_button_example" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "animated_button_example" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2023 com.snowfeng.animated_button. All rights reserved." "\0"
-            VALUE "OriginalFilename", "animated_button_example.exe" "\0"
-            VALUE "ProductName", "animated_button_example" "\0"
+            VALUE "InternalName", "state_loading_button_example" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2023 com.snowfeng.state_loading_button. All rights reserved." "\0"
+            VALUE "OriginalFilename", "state_loading_button_example.exe" "\0"
+            VALUE "ProductName", "state_loading_button_example" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
