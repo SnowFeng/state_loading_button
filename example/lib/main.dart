@@ -37,6 +37,7 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AnimatedButton(
                 buttonBuilder: (state){

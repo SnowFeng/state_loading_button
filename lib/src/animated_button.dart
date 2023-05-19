@@ -144,7 +144,12 @@ class _AnimatedButtonState extends State<AnimatedButton>
         _statusChangeController.reverse();
       }
     });
-    _initAnimation(button, progress);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      _initAnimation(button, progress);
+      setState(() {
+
+      });
+    });
   }
 
   ///状态改变
@@ -172,6 +177,18 @@ class _AnimatedButtonState extends State<AnimatedButton>
   void _initAnimation(ButtonStatus button, ButtonProgress progress) {
     double startWidth = widget.width ?? button.width;
     double startHeight = widget.height ?? button.height;
+    RenderObject? render=context.findRenderObject();
+    if(render!=null){
+      RenderBox renderBox=render as RenderBox;
+      BoxConstraints constraints = renderBox.constraints;
+      ///强约束下使用约束尺寸
+      if(constraints.minWidth>startWidth){
+        startWidth=constraints.minWidth;
+      }
+      if(constraints.minHeight>startHeight){
+        startHeight=constraints.minHeight;
+      }
+    }
     double endWidth = startWidth;
     double endHeight = startHeight;
     double? dimension = progress.dimension;
@@ -236,10 +253,11 @@ class _AnimatedButtonState extends State<AnimatedButton>
   }
 
   Widget _buildButtonWidget() {
-    return SizedBox(
-      width: _widthAnimation?.value ?? (widget.width ?? button.width),
-      height: _heightAnimation?.value ?? (widget.height ?? button.height),
+    double width= _widthAnimation?.value ?? (widget.width ?? button.width);
+    double height= _heightAnimation?.value ?? (widget.height ?? button.height);
+    return Center(//赋予宽约束
       child: CustomPaint(
+        size: Size(width, height),
         painter: AnimatedButtonPainter(
             buttonStatus: button.copyWith(
                 buttonColor: Color.lerp(button.buttonColor,
