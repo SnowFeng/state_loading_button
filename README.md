@@ -3,7 +3,7 @@
 一个简单的带进度动画的按钮，可自定义各种状态样式以及动态改变进度动画样式。
 
 ## 效果图
-![](https://raw.githubusercontent.com/SnowFeng/state_loading_button/main/demo.gif)
+<img src="https://raw.githubusercontent.com/SnowFeng/state_loading_button/main/demo.gif" width="50%">
 
 ## 构造
 ```dart
