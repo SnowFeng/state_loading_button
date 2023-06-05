@@ -37,6 +37,7 @@ class AnimatedButton extends StatefulWidget {
 
   final Duration? statusChangeDuration; //状态变化动画时长
   final Duration? loadingDuration; //无进度加载动画单次时长
+  final Curve statusCurve;
   final AnimatedButtonTap? onTap;
   final ButtonStateNotifier? stateNotifier;
   final ButtonProgressNotifier? buttonProgressNotifier;
@@ -51,9 +52,10 @@ class AnimatedButton extends StatefulWidget {
     this.progressBuilder,
     this.statusChangeDuration = const Duration(milliseconds: 500),
     this.loadingDuration = const Duration(milliseconds: 1000),
+    this.statusCurve = Curves.linear,
     this.onTap,
     this.stateNotifier,
-    this.buttonProgressNotifier,
+    this.buttonProgressNotifier
   }) : super(key: key);
 
   @override
@@ -216,7 +218,7 @@ class _AnimatedButtonState extends State<AnimatedButton>
       }
     }
     CurvedAnimation curved = CurvedAnimation(
-        parent: _statusChangeController, curve: const Interval(0.0, 1.0));
+        parent: _statusChangeController, curve: Interval(0.0, 1.0,curve: widget.statusCurve));
     _widthAnimation = Tween(begin: startWidth, end: endWidth).animate(curved);
     _heightAnimation =
         Tween(begin: startHeight, end: endHeight).animate(curved);

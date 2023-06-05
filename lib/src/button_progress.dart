@@ -12,6 +12,7 @@ class ButtonProgress {
   final AnimatedButtonProgressType progressType;
   final Color foreground;
   final Color background;
+  final Color? circularBackground; //进度条背景（圆形进度、矩形进度0）
   final bool isTextInner; //文字是否在进度条内（线性类型）
   final bool isTextFollowed; //文字是否跟随进度条移动（线性类型）
   final TextStyle textStyle;
@@ -21,7 +22,7 @@ class ButtonProgress {
   final TextStyle? suffixStyle;
   final double size;//进度条宽度
   final double? dimension;//圆形进度条半径或线性进度条宽度
-  final double padding;//文字与进度条右边间距
+  final double padding;//文字与进度条右边间距（线性类型）
   final BorderSide? borderSide;//边框
 
   const ButtonProgress({
@@ -29,6 +30,7 @@ class ButtonProgress {
     this.progressType = AnimatedButtonProgressType.circularIndeterminate,
     this.foreground = Colors.orange,
     this.background = Colors.blueAccent,
+    this.circularBackground,
     this.isTextInner = true,
     this.isTextFollowed = true,
     this.textStyle = const TextStyle(fontSize: 12, color: Colors.white),
@@ -47,6 +49,7 @@ class ButtonProgress {
         AnimatedButtonProgressType? progressType,
         Color? foreground,
         Color? background,
+        Color? circularBackground,
         bool? isTextInner,
         bool? isTextFollowed,
         TextStyle? textStyle,
@@ -64,6 +67,7 @@ class ButtonProgress {
       progressType: progressType ?? this.progressType,
       foreground: foreground ?? this.foreground,
       background: background ?? this.background,
+      circularBackground: circularBackground ?? this.circularBackground,
       isTextInner: isTextInner ?? this.isTextInner,
       isTextFollowed: isTextFollowed ?? this.isTextFollowed,
       textStyle: textStyle ?? this.textStyle,

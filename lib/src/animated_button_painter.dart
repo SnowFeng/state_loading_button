@@ -66,6 +66,10 @@ class AnimatedButtonPainter extends CustomPainter {
       //带进度
       Rect rect = Rect.fromCircle(
           center: Offset(size.width / 2, offset), radius: offset - offset / 3);
+      if(buttonProgress.circularBackground!=null){
+        paint.color = buttonProgress.circularBackground!;
+        canvas.drawArc(rect, 0, 2 * pi, false, paint);//画进度条背景
+      }
       if (progress > 0) {
         paint.color = buttonProgress.foreground;
         //让边界有弧形过渡
@@ -100,7 +104,7 @@ class AnimatedButtonPainter extends CustomPainter {
   }
 
   void drawStartOrEndArc(Canvas canvas, Paint paint, Size size, double diff,
-      offset, bool isStart) {
+      double offset, bool isStart) {
     double angle = acos(diff / size.height);
     double startAngle2 = pi / 2 - angle;
     double sweepAngle2 = 2 * angle - pi;
