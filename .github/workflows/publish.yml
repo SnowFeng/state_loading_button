@@ -15,8 +15,28 @@ on:
 # Publish using the reusable workflow from dart-lang.
 jobs:
   publish:
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+      contents: write
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v3
+
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Set up Flutter
+          uses: subosito/flutter-action@v2
+          with:
+            channel: stable
+            cache: true
+
+      - name: Publish to pub.dev
+          shell: bash
+          run: >
+            flutter pub publish --force
     # with:
     #   working-directory: path/to/package/within/repository
