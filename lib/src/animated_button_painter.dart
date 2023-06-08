@@ -29,18 +29,18 @@ class AnimatedButtonPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint();
-    drawBackground(canvas, paint, size);
+    _drawBackground(canvas, paint, size);
     if (buttonStatus.status == AnimatedButtonStatus.loading) {
       if (buttonProgress.isProgressCircular) {
-        drawCircleProgress(canvas, paint, size);
+        _drawCircleProgress(canvas, paint, size);
       } else {
-        drawLinearProgress(canvas, paint, size);
+        _drawLinearProgress(canvas, paint, size);
       }
     }
   }
 
   ///画圆形进度
-  void drawCircleProgress(Canvas canvas, Paint paint, Size size) {
+  void _drawCircleProgress(Canvas canvas, Paint paint, Size size) {
     double offset = size.height / 2;
     paint.style = PaintingStyle.stroke;
     paint.strokeWidth = buttonProgress.size;
@@ -57,7 +57,7 @@ class AnimatedButtonPainter extends CustomPainter {
           false,
           paint);
       canvas.save();
-      Path path = getPath(progressRadius, 1.5 * pi);
+      Path path = _getPath(progressRadius, 1.5 * pi);
       canvas.translate(size.width / 2, offset);
       canvas.rotate(value * 2 * pi);
       canvas.drawPath(path, paint);
@@ -103,36 +103,9 @@ class AnimatedButtonPainter extends CustomPainter {
     }
   }
 
-  void drawStartOrEndArc(Canvas canvas, Paint paint, Size size, double diff,
-      double offset, bool isStart) {
-    double angle = acos(diff / size.height);
-    double startAngle2 = pi / 2 - angle;
-    double sweepAngle2 = 2 * angle - pi;
-    double startAngle1 = pi * 1.5 - angle;
-    double sweepAngle1 = sweepAngle2;
-    double leftStart = 0;
-    if (isStart) {
-      leftStart = 2 * (offset - offset * cos(sweepAngle2 / 2)) - size.height;
-    } else {
-      leftStart = size.width - 2 * (offset - offset * cos(sweepAngle2 / 2));
-    }
-    canvas.drawArc(
-        Rect.fromLTWH(leftStart, 0.0, size.height, size.height),
-        isStart ? startAngle2 : startAngle1,
-        isStart ? sweepAngle2 : sweepAngle1,
-        false,
-        paint);
-    canvas.drawArc(
-        Rect.fromLTWH(isStart ? 0.0 : (size.width - size.height), 0.0,
-            size.height, size.height),
-        isStart ? startAngle1 : startAngle2,
-        isStart ? sweepAngle1 : sweepAngle2,
-        false,
-        paint);
-  }
 
   ///画线性进度
-  void drawLinearProgress(Canvas canvas, Paint paint, Size size) {
+  void _drawLinearProgress(Canvas canvas, Paint paint, Size size) {
     double offset = size.height / 2;
     paint.style = PaintingStyle.fill;
     //画进度条
@@ -144,25 +117,11 @@ class AnimatedButtonPainter extends CustomPainter {
       double start = value * size.width;
       double end = start + length;
       if (end >= size.width) {
-        //结束
-        double diff = size.width - start;
-        if (diff <= size.height) {
-          drawStartOrEndArc(canvas, paint, size, diff, offset, false);
-        } else {
-          end = size.width;
-          canvas.drawRRect(
-              RRect.fromLTRBXY(start, 0.0, end, size.height, offset, offset),
-              paint);
-        }
-        //开始
-        diff = length - diff;
-        if (diff <= size.height) {
-          drawStartOrEndArc(canvas, paint, size, diff, offset, true);
-        } else {
-          RRect rRect =
-              RRect.fromLTRBXY(0.0, 0.0, diff, size.height, offset, offset);
-          canvas.drawRRect(rRect, paint);
-        }
+        canvas.clipRRect(RRect.fromLTRBXY(0.0, 0.0, size.width, size.height, offset, offset));
+        canvas.drawRRect(RRect.fromLTRBXY(0.0, 0.0, end-size.width, size.height, offset, offset), paint);
+        canvas.drawRRect(
+            RRect.fromLTRBXY(start, 0.0, end, size.height, offset, offset),
+            paint);
       } else {
         RRect rRect =
             RRect.fromLTRBXY(start, 0.0, end, size.height, offset, offset);
@@ -230,7 +189,7 @@ class AnimatedButtonPainter extends CustomPainter {
   }
 
   ///画背景
-  void drawBackground(Canvas canvas, Paint paint, Size size) {
+  void _drawBackground(Canvas canvas, Paint paint, Size size) {
     paint.color = buttonStatus.buttonColor;
     double offset = size.height / 2;
     RRect rRect =
@@ -267,7 +226,7 @@ class AnimatedButtonPainter extends CustomPainter {
   }
 
   ///画等腰三角形
-  Path getPath(double radius, double radian) {
+  Path _getPath(double radius, double radian) {
     Path path = Path();
     double yPoint = sin(radian) * radius;
     double xPoint = cos(radian) * radius;
