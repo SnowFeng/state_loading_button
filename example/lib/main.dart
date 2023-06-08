@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:state_loading_button/state_loading_button.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 void main() {
   runApp(const MyApp());
@@ -103,7 +102,7 @@ class _MyAppState extends State<MyApp> {
             onTap: (button) {
               switch (button.state) {
                 case 'normal':
-                  _statusNotifier.changeState('loading');
+                  _statusNotifier.value='loading';
                   int progress = 0;
                   Timer.periodic(const Duration(milliseconds: 30), (timer) {
                     progress++;
@@ -114,13 +113,13 @@ class _MyAppState extends State<MyApp> {
                         background: Color.lerp(
                             Colors.green, Colors.yellow, progress / 100));
                     if (progress > 100) {
-                      _statusNotifier.changeState('paused');
+                      _statusNotifier.value='paused';
                       timer.cancel();
                     }
                   });
                   break;
                 case 'paused':
-                  _statusNotifier.changeState('loading');
+                  _statusNotifier.value='loading';
                   int progress = 0;
                   Timer.periodic(const Duration(milliseconds: 30), (timer) {
                     _progressNotifier.changeProgress(
@@ -133,21 +132,21 @@ class _MyAppState extends State<MyApp> {
                     );
                     progress++;
                     if (progress > 100) {
-                      _statusNotifier.changeState('error');
+                      _statusNotifier.value='error';
                       timer.cancel();
                     }
                   });
                   break;
                 case 'complete':
-                  _statusNotifier.changeState('loading');
+                  _statusNotifier.value='loading';
                   Future.delayed(const Duration(milliseconds: 3000), () {
-                    _statusNotifier.changeState('normal');
+                    _statusNotifier.value='normal';
                   });
                   break;
                 case 'error':
-                  _statusNotifier.changeState('loading');
+                  _statusNotifier.value='loading';
                   Future.delayed(const Duration(milliseconds: 3000), () {
-                    _statusNotifier.changeState('complete');
+                    _statusNotifier.value='complete';
                   });
                   break;
               }

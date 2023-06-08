@@ -9,23 +9,21 @@ class ButtonStateNotifier extends ChangeNotifier {
     _isDisposed = false;
   }
 
+  void initState(String state){
+    this._state=state;
+  }
+
   String get value => _state;
 
   set value(String value) {
     if (_isDisposed) {
       return;
     }
+    bool isNeedNotify=_state!=value;
     _state = value;
-    notifyListeners();
-  }
-
-  ///改变按钮状态
-  void changeState(String state) {
-    if (_isDisposed) {
-      return;
+    if(isNeedNotify){
+      notifyListeners();
     }
-    _state = state;
-    notifyListeners();
   }
 
   void addStateChangeListener(

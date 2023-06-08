@@ -31,6 +31,8 @@ class AnimatedButton extends StatefulWidget {
 
   final BorderSide? borderSide; //所有状态统一边框
 
+  final String? initialState;//初始状态
+
   final ButtonStatus Function(String? type) buttonBuilder;
 
   final ButtonProgress Function(ButtonStatus button,ButtonProgress progress)? progressBuilder;
@@ -49,6 +51,7 @@ class AnimatedButton extends StatefulWidget {
     this.height,
     this.borderRadius,
     this.borderSide,
+    this.initialState,
     this.progressBuilder,
     this.statusChangeDuration = const Duration(milliseconds: 500),
     this.loadingDuration = const Duration(milliseconds: 1000),
@@ -89,33 +92,33 @@ class _AnimatedButtonState extends State<AnimatedButton>
   void dispose() {
     _statusChangeController.dispose();
     _loadingController.dispose();
-    widget.stateNotifier?.dispose();
-    widget.buttonProgressNotifier?.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    button = widget.buttonBuilder.call(null);
-    progress = widget.progressBuilder?.call(const ButtonStatus(),const ButtonProgress())??const ButtonProgress();
-    if (widget.stateNotifier != null) {
-      widget.stateNotifier!.value = button.state;
-    }
+    button = widget.buttonBuilder.call(widget.initialState);
+    widget.stateNotifier?.initState(button.state);
+    progress = widget.progressBuilder?.call(button,const ButtonProgress())??const ButtonProgress();
     if (widget.buttonProgressNotifier != null) {
       widget.buttonProgressNotifier!.value = progress;
     }
     widget.stateNotifier?.addStateChangeListener((state) {
-      _changeButton(state);
+      if(mounted){
+        _changeButton(state);
+      }
     });
 
     widget.buttonProgressNotifier?.addProgressChangeListener((buttonProgress) {
-      setState(() {
-        if (progress.needChangeAnimation(buttonProgress)) {
-          _initAnimation(button, buttonProgress);
-        }
-        progress = buttonProgress;
-      });
+      if(mounted){
+        setState(() {
+          if (progress.needChangeAnimation(buttonProgress)) {
+            _initAnimation(button, buttonProgress);
+          }
+          progress = buttonProgress;
+        });
+      }
     });
 
     _statusChangeController.addStatusListener((status) {
@@ -140,10 +143,12 @@ class _AnimatedButtonState extends State<AnimatedButton>
     });
 
     _loadingController.addListener(() {
-      setState(() {});
-      if (button.status != AnimatedButtonStatus.loading) {
-        _loadingController.stop(canceled: false);
-        _statusChangeController.reverse();
+      if(mounted){
+        setState(() {});
+        if (button.status != AnimatedButtonStatus.loading) {
+          _loadingController.stop(canceled: false);
+          _statusChangeController.reverse();
+        }
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
