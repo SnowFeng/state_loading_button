@@ -1,3 +1,5 @@
+## 0.1.0
+* 更换linearIndeterminate类型进度条绘制方法
 ## 0.0.9
 * 修复bug
 ## 0.0.8
