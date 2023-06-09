@@ -39,6 +39,7 @@ class ButtonProgressNotifier extends ChangeNotifier {
     double? dimension,
     double? padding,
     BorderSide? borderSide,
+    BoxShadow? shadow
   }) {
     if(_isDisposed){
       return;
@@ -60,6 +61,7 @@ class ButtonProgressNotifier extends ChangeNotifier {
       dimension: dimension,
       padding: padding,
       borderSide: borderSide,
+      shadow: shadow,
     );
     notifyListeners();
   }

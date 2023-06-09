@@ -56,6 +56,7 @@ class _MyAppState extends State<MyApp> {
                       dimension: 200,
                       background: Colors.blue,
                       foreground: Colors.orangeAccent,
+                      shadow: BoxShadow(color: Colors.purpleAccent,offset: Offset(0, 4),blurRadius: 5),
                       prefix: '前缀',
                       prefixStyle:
                           TextStyle(color: Colors.blueGrey, fontSize: 8),
@@ -79,18 +80,21 @@ class _MyAppState extends State<MyApp> {
                       size: 5,
                       dimension: 40,
                       background: Colors.white,
+                      shadow: BoxShadow(color: Colors.green,blurRadius: 10),
                       borderSide:
                           BorderSide(color: Colors.redAccent, width: 5));
                 case 'complete':
                   return const ButtonProgress(
                       progressType:
                           AnimatedButtonProgressType.linearIndeterminate,
+                      shadow: BoxShadow(color: Colors.black,offset: Offset(0, 2),blurRadius: 5),
                       size: 10,
                       dimension: 200);
                 case 'error':
                   return const ButtonProgress(
                       progressType:
                           AnimatedButtonProgressType.circularIndeterminate,
+                      shadow: BoxShadow(color: Colors.yellow,offset: Offset(0, 2),blurRadius: 5),
                       size: 5,
                       dimension: 30);
                 default:
@@ -165,6 +169,11 @@ class _MyAppState extends State<MyApp> {
     textStyle: TextStyle(fontSize: 14.0, color: Colors.white),
     buttonColor: Colors.blue,
     borderRadius: BorderRadius.all(Radius.circular(30)),
+    shadow: BoxShadow(
+      color: Colors.red,
+      offset: Offset(0, 2),
+      blurRadius: 8
+    )
   );
 
   ///暂停
@@ -175,7 +184,12 @@ class _MyAppState extends State<MyApp> {
       text: 'Paused',
       textStyle: TextStyle(fontSize: 14.0, color: Colors.white),
       buttonColor: Colors.orangeAccent,
-      borderRadius: BorderRadius.all(Radius.circular(12)));
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      shadow: BoxShadow(
+          color: Colors.blue,
+          blurRadius: 8
+      )
+  );
 
   ///取消
   static const ButtonStatus _canceled = ButtonStatus(
@@ -184,7 +198,12 @@ class _MyAppState extends State<MyApp> {
       text: 'Canceled',
       textStyle: TextStyle(fontSize: 14.0, color: Colors.white),
       buttonColor: Colors.grey,
-      borderRadius: BorderRadius.all(Radius.circular(12)));
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      shadow: BoxShadow(
+          color: Colors.blue,
+          blurRadius: 8
+      )
+  );
 
   ///完成
   static const ButtonStatus _complete = ButtonStatus(
@@ -196,7 +215,13 @@ class _MyAppState extends State<MyApp> {
       text: 'Complete',
       textStyle: TextStyle(fontSize: 14.0, color: Colors.white),
       buttonColor: Colors.greenAccent,
-      borderRadius: BorderRadius.all(Radius.circular(12)));
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      shadow: BoxShadow(
+          color: Colors.orangeAccent,
+          offset: Offset(0, 4),
+          blurRadius: 4
+      )
+  );
 
   ///错误
   static const ButtonStatus _error = ButtonStatus(
@@ -207,5 +232,11 @@ class _MyAppState extends State<MyApp> {
       text: 'Error',
       textStyle: TextStyle(fontSize: 14.0, color: Colors.white),
       buttonColor: Colors.redAccent,
-      borderRadius: BorderRadius.all(Radius.circular(12)));
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      shadow: BoxShadow(
+        color: Colors.pinkAccent,
+          offset: Offset(0, 8),
+          blurRadius: 10
+      )
+  );
 }

@@ -16,7 +16,8 @@ class ButtonStatus {
   final Color buttonColor;
   final BorderRadius? borderRadius;
   final BorderSide? borderSide;
-  final bool isTapScale;
+  final bool isTapScale; //是否点击缩放
+  final BoxShadow? shadow; //阴影
 
   const ButtonStatus({
     this.width = 100,
@@ -28,6 +29,7 @@ class ButtonStatus {
     this.buttonColor = Colors.blue,
     this.borderRadius,
     this.borderSide,
+    this.shadow,
     this.isTapScale=true
   });
 
@@ -41,7 +43,8 @@ class ButtonStatus {
       Color? buttonColor,
       BorderRadius? borderRadius,
       BorderSide? borderSide,
-        bool? isTapScale}) {
+        bool? isTapScale,
+    BoxShadow? shadow}) {
     return ButtonStatus(
       width: width ?? this.width,
       height: height ?? this.height,
@@ -53,6 +56,7 @@ class ButtonStatus {
       borderRadius: borderRadius ?? this.borderRadius,
       borderSide: borderSide ?? this.borderSide,
       isTapScale: isTapScale ?? this.isTapScale,
+      shadow: shadow ?? this.shadow,
     );
   }
 

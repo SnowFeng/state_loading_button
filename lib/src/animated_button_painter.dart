@@ -66,9 +66,9 @@ class AnimatedButtonPainter extends CustomPainter {
       //带进度
       Rect rect = Rect.fromCircle(
           center: Offset(size.width / 2, offset), radius: offset - offset / 3);
-      if(buttonProgress.circularBackground!=null){
+      if (buttonProgress.circularBackground != null) {
         paint.color = buttonProgress.circularBackground!;
-        canvas.drawArc(rect, 0, 2 * pi, false, paint);//画进度条背景
+        canvas.drawArc(rect, 0, 2 * pi, false, paint); //画进度条背景
       }
       if (progress > 0) {
         paint.color = buttonProgress.foreground;
@@ -103,7 +103,6 @@ class AnimatedButtonPainter extends CustomPainter {
     }
   }
 
-
   ///画线性进度
   void _drawLinearProgress(Canvas canvas, Paint paint, Size size) {
     double offset = size.height / 2;
@@ -117,8 +116,12 @@ class AnimatedButtonPainter extends CustomPainter {
       double start = value * size.width;
       double end = start + length;
       if (end >= size.width) {
-        canvas.clipRRect(RRect.fromLTRBXY(0.0, 0.0, size.width, size.height, offset, offset));
-        canvas.drawRRect(RRect.fromLTRBXY(0.0, 0.0, end-size.width, size.height, offset, offset), paint);
+        canvas.clipRRect(RRect.fromLTRBXY(
+            0.0, 0.0, size.width, size.height, offset, offset));
+        canvas.drawRRect(
+            RRect.fromLTRBXY(
+                0.0, 0.0, end - size.width, size.height, offset, offset),
+            paint);
         canvas.drawRRect(
             RRect.fromLTRBXY(start, 0.0, end, size.height, offset, offset),
             paint);
@@ -206,6 +209,9 @@ class AnimatedButtonPainter extends CustomPainter {
           bottomRight: bottomRight,
           bottomLeft: bottomLeft);
     }
+    if(buttonStatus.shadow!=null){
+      _drawShadows(canvas, Path()..addRRect(rRect), [buttonStatus.shadow!]);
+    }
     canvas.drawRRect(rRect, paint);
     //画文字
     TextPainter textPainter = TextPainter();
@@ -217,7 +223,8 @@ class AnimatedButtonPainter extends CustomPainter {
     double textStarPositionY = (size.height - textPainter.size.height) / 2;
     textPainter.paint(canvas, Offset(textStarPositionX, textStarPositionY));
     //画边框
-    if (buttonStatus.borderSide != null&&buttonStatus.borderSide!=BorderSide.none) {
+    if (buttonStatus.borderSide != null &&
+        buttonStatus.borderSide != BorderSide.none) {
       paint.style = PaintingStyle.stroke;
       paint.strokeWidth = buttonStatus.borderSide!.width;
       paint.color = buttonStatus.borderSide!.color;
@@ -241,6 +248,28 @@ class AnimatedButtonPainter extends CustomPainter {
     path.lineTo(xVertex, yPoint);
     path.close();
     return path;
+  }
+
+  ///阴影绘制
+  void _drawShadows(Canvas canvas, Path path, List<BoxShadow> shadows) {
+    for (final BoxShadow shadow in shadows) {
+      final Paint shadowPainter = shadow.toPaint();
+      if (shadow.spreadRadius == 0) {
+        canvas.drawPath(path.shift(shadow.offset), shadowPainter);
+      } else {
+        Rect zone = path.getBounds();
+        double xScale = (zone.width + shadow.spreadRadius) / zone.width;
+        double yScale = (zone.height + shadow.spreadRadius) / zone.height;
+        Matrix4 m4 = Matrix4.identity();
+        m4.translate(zone.width / 2, zone.height / 2);
+        m4.scale(xScale, yScale);
+        m4.translate(-zone.width / 2, -zone.height / 2);
+        canvas.drawPath(
+            path.shift(shadow.offset).transform(m4.storage), shadowPainter);
+      }
+    }
+    Paint whitePaint = Paint()..color = Colors.white;
+    canvas.drawPath(path, whitePaint);
   }
 
   @override
