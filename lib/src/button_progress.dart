@@ -24,7 +24,7 @@ class ButtonProgress {
   final double? dimension;//圆形进度条半径或线性进度条宽度
   final double padding;//文字与进度条右边间距（线性类型）
   final BorderSide? borderSide;//边框
-  final BoxShadow? shadow;//阴影
+  final List<BoxShadow>? shadows;//阴影
 
   const ButtonProgress({
     this.progress = 0,
@@ -43,7 +43,7 @@ class ButtonProgress {
     this.suffixStyle,
     this.padding=5,
     this.borderSide,
-    this.shadow
+    this.shadows
   });
 
   ButtonProgress copyWith(
@@ -63,7 +63,7 @@ class ButtonProgress {
         double? dimension,
         double? padding,
         BorderSide? borderSide,
-        BoxShadow? shadow
+        List<BoxShadow>? shadows
         }) {
     return ButtonProgress(
       progress: progress ?? this.progress,
@@ -82,7 +82,7 @@ class ButtonProgress {
       dimension: dimension ?? this.dimension,
       padding: padding ?? this.padding,
       borderSide: borderSide ?? this.borderSide,
-      shadow: shadow ?? this.shadow,
+      shadows: shadows ?? this.shadows,
     );
   }
 

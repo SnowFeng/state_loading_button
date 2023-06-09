@@ -12,6 +12,10 @@ class AnimatedButtonPainter extends CustomPainter {
   //进度值
   int progress;
 
+  Paint buttonPaint= Paint();
+
+  Paint progressPaint= Paint();
+
   final ButtonStatus buttonStatus;
 
   final ButtonProgress buttonProgress;
@@ -28,26 +32,25 @@ class AnimatedButtonPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    Paint paint = Paint();
-    _drawBackground(canvas, paint, size);
+    _drawBackground(canvas, size);
     if (buttonStatus.status == AnimatedButtonStatus.loading) {
       if (buttonProgress.isProgressCircular) {
-        _drawCircleProgress(canvas, paint, size);
+        _drawCircleProgress(canvas, size);
       } else {
-        _drawLinearProgress(canvas, paint, size);
+        _drawLinearProgress(canvas, size);
       }
     }
   }
 
   ///画圆形进度
-  void _drawCircleProgress(Canvas canvas, Paint paint, Size size) {
+  void _drawCircleProgress(Canvas canvas, Size size) {
     double offset = size.height / 2;
-    paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = buttonProgress.size;
+    progressPaint.style = PaintingStyle.stroke;
+    progressPaint.strokeWidth = buttonProgress.size;
     if (buttonProgress.progressType ==
         AnimatedButtonProgressType.circularIndeterminate) {
       //不带进度
-      paint.color = buttonProgress.foreground;
+      progressPaint.color = buttonProgress.foreground;
       double progressRadius = offset / 2; //进度条半径
       canvas.drawArc(
           Rect.fromCircle(
@@ -55,27 +58,27 @@ class AnimatedButtonPainter extends CustomPainter {
           2 * value * pi,
           1.5 * pi,
           false,
-          paint);
+          progressPaint);
       canvas.save();
       Path path = _getPath(progressRadius, 1.5 * pi);
       canvas.translate(size.width / 2, offset);
       canvas.rotate(value * 2 * pi);
-      canvas.drawPath(path, paint);
+      canvas.drawPath(path, progressPaint);
       canvas.restore();
     } else {
       //带进度
       Rect rect = Rect.fromCircle(
           center: Offset(size.width / 2, offset), radius: offset - offset / 3);
       if (buttonProgress.circularBackground != null) {
-        paint.color = buttonProgress.circularBackground!;
-        canvas.drawArc(rect, 0, 2 * pi, false, paint); //画进度条背景
+        progressPaint.color = buttonProgress.circularBackground!;
+        canvas.drawArc(rect, 0, 2 * pi, false, progressPaint); //画进度条背景
       }
       if (progress > 0) {
-        paint.color = buttonProgress.foreground;
+        progressPaint.color = buttonProgress.foreground;
         //让边界有弧形过渡
-        paint.strokeCap = StrokeCap.round;
+        progressPaint.strokeCap = StrokeCap.round;
         //画进度条
-        canvas.drawArc(rect, -0.5 * pi, progress / 100 * 2 * pi, false, paint);
+        canvas.drawArc(rect, -0.5 * pi, progress / 100 * 2 * pi, false, progressPaint);
       }
       //进度文字
       TextPainter textPainter = TextPainter();
@@ -104,11 +107,11 @@ class AnimatedButtonPainter extends CustomPainter {
   }
 
   ///画线性进度
-  void _drawLinearProgress(Canvas canvas, Paint paint, Size size) {
+  void _drawLinearProgress(Canvas canvas, Size size) {
     double offset = size.height / 2;
-    paint.style = PaintingStyle.fill;
+    progressPaint.style = PaintingStyle.fill;
     //画进度条
-    paint.color = buttonProgress.foreground;
+    progressPaint.color = buttonProgress.foreground;
     if (buttonProgress.progressType ==
         AnimatedButtonProgressType.linearIndeterminate) {
       //无进度显示
@@ -121,14 +124,14 @@ class AnimatedButtonPainter extends CustomPainter {
         canvas.drawRRect(
             RRect.fromLTRBXY(
                 0.0, 0.0, end - size.width, size.height, offset, offset),
-            paint);
+            progressPaint);
         canvas.drawRRect(
             RRect.fromLTRBXY(start, 0.0, end, size.height, offset, offset),
-            paint);
+            progressPaint);
       } else {
         RRect rRect =
             RRect.fromLTRBXY(start, 0.0, end, size.height, offset, offset);
-        canvas.drawRRect(rRect, paint);
+        canvas.drawRRect(rRect, progressPaint);
       }
     } else {
       //有进度显示
@@ -136,11 +139,11 @@ class AnimatedButtonPainter extends CustomPainter {
       if (progress > 0) {
         if (right < offset * 2) {
           canvas.drawArc(Rect.fromLTWH(0.0, 0.0, size.height, size.height),
-              pi * 3 / 2, pi * 2, false, paint);
+              pi * 3 / 2, pi * 2, false, progressPaint);
         } else {
           canvas.drawRRect(
               RRect.fromLTRBXY(0.0, 0.0, right, size.height, offset, offset),
-              paint);
+              progressPaint);
         }
       }
       //进度文字
@@ -192,8 +195,7 @@ class AnimatedButtonPainter extends CustomPainter {
   }
 
   ///画背景
-  void _drawBackground(Canvas canvas, Paint paint, Size size) {
-    paint.color = buttonStatus.buttonColor;
+  void _drawBackground(Canvas canvas, Size size) {
     double offset = size.height / 2;
     RRect rRect =
         RRect.fromLTRBXY(0.0, 0.0, size.width, size.height, offset, offset);
@@ -209,10 +211,9 @@ class AnimatedButtonPainter extends CustomPainter {
           bottomRight: bottomRight,
           bottomLeft: bottomLeft);
     }
-    if(buttonStatus.shadow!=null){
-      _drawShadows(canvas, Path()..addRRect(rRect), [buttonStatus.shadow!]);
-    }
-    canvas.drawRRect(rRect, paint);
+    buttonPaint.style = PaintingStyle.fill;
+    buttonPaint.color = buttonStatus.buttonColor;
+    _drawShadowsRRect(canvas, rRect, buttonStatus.shadows,buttonPaint);
     //画文字
     TextPainter textPainter = TextPainter();
     textPainter.textDirection = TextDirection.ltr;
@@ -225,10 +226,10 @@ class AnimatedButtonPainter extends CustomPainter {
     //画边框
     if (buttonStatus.borderSide != null &&
         buttonStatus.borderSide != BorderSide.none) {
-      paint.style = PaintingStyle.stroke;
-      paint.strokeWidth = buttonStatus.borderSide!.width;
-      paint.color = buttonStatus.borderSide!.color;
-      canvas.drawRRect(rRect, paint);
+      buttonPaint.style = PaintingStyle.stroke;
+      buttonPaint.strokeWidth = buttonStatus.borderSide!.width;
+      buttonPaint.color = buttonStatus.borderSide!.color;
+      canvas.drawRRect(rRect, buttonPaint);
     }
   }
 
@@ -250,26 +251,28 @@ class AnimatedButtonPainter extends CustomPainter {
     return path;
   }
 
-  ///阴影绘制
-  void _drawShadows(Canvas canvas, Path path, List<BoxShadow> shadows) {
-    for (final BoxShadow shadow in shadows) {
-      final Paint shadowPainter = shadow.toPaint();
-      if (shadow.spreadRadius == 0) {
-        canvas.drawPath(path.shift(shadow.offset), shadowPainter);
-      } else {
-        Rect zone = path.getBounds();
-        double xScale = (zone.width + shadow.spreadRadius) / zone.width;
-        double yScale = (zone.height + shadow.spreadRadius) / zone.height;
-        Matrix4 m4 = Matrix4.identity();
-        m4.translate(zone.width / 2, zone.height / 2);
-        m4.scale(xScale, yScale);
-        m4.translate(-zone.width / 2, -zone.height / 2);
-        canvas.drawPath(
-            path.shift(shadow.offset).transform(m4.storage), shadowPainter);
+  ///绘制带阴影的RRect
+  void _drawShadowsRRect(Canvas canvas, RRect rRect, List<BoxShadow>? shadows,Paint paint) {
+    if(shadows!=null){
+      Path path=Path()..addRRect(rRect);
+      for (final BoxShadow shadow in shadows) {
+        final Paint shadowPainter = shadow.toPaint();
+        if (shadow.spreadRadius == 0) {
+          canvas.drawPath(path.shift(shadow.offset), shadowPainter);
+        } else {
+          Rect zone = path.getBounds();
+          double xScale = (zone.width + shadow.spreadRadius) / zone.width;
+          double yScale = (zone.height + shadow.spreadRadius) / zone.height;
+          Matrix4 m4 = Matrix4.identity();
+          m4.translate(zone.width / 2, zone.height / 2);
+          m4.scale(xScale, yScale);
+          m4.translate(-zone.width / 2, -zone.height / 2);
+          canvas.drawPath(
+              path.shift(shadow.offset).transform(m4.storage), shadowPainter);
+        }
       }
     }
-    Paint whitePaint = Paint()..color = Colors.white;
-    canvas.drawPath(path, whitePaint);
+    canvas.drawRRect(rRect, paint);
   }
 
   @override

@@ -271,7 +271,7 @@ class _AnimatedButtonState extends State<AnimatedButton>
                     progress.background, _statusChangeController.value),
                 borderRadius: _cornerAnimation?.value,
                 borderSide: _buildBorderSide(),
-                shadow: BoxShadow.lerp(button.shadow, progress.shadow, _statusChangeController.value)
+                shadows: BoxShadow.lerpList(button.shadows, progress.shadows, _statusChangeController.value)
             ),
             buttonProgress: progress,
             progress: progress.progress,
