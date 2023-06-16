@@ -12,9 +12,11 @@ class AnimatedButtonPainter extends CustomPainter {
   //进度值
   int progress;
 
-  Paint buttonPaint= Paint();
+  double statusValue;
 
-  Paint progressPaint= Paint();
+  Paint buttonPaint = Paint();
+
+  Paint progressPaint = Paint();
 
   final ButtonStatus buttonStatus;
 
@@ -25,15 +27,28 @@ class AnimatedButtonPainter extends CustomPainter {
     required this.buttonProgress,
     this.progress = 0,
     this.value = 0.0,
+    this.statusValue = 1.0,
   }) {
+    assert(buttonProgress.foregroundGradient == null ||
+        !buttonProgress.isProgressCircular ||
+        (buttonProgress.isProgressCircular &&
+            (buttonProgress.foregroundGradient is SweepGradient ||
+                buttonProgress.circularBackgroundGradient is SweepGradient)));
     progress = progress > 100 ? 100 : progress;
     value = value > 1 ? 1 : value;
+    statusValue = statusValue > 1 ? 1 : statusValue;
   }
 
   @override
   void paint(Canvas canvas, Size size) {
     _drawBackground(canvas, size);
-    if (buttonStatus.status == AnimatedButtonStatus.loading) {
+    bool canDrawProgress=false;
+    if(buttonProgress.isProgressOpacityAnim){
+      canDrawProgress = statusValue>0;
+    }else{
+      canDrawProgress = buttonStatus.status == AnimatedButtonStatus.loading;
+    }
+    if (canDrawProgress) {
       if (buttonProgress.isProgressCircular) {
         _drawCircleProgress(canvas, size);
       } else {
@@ -50,52 +65,83 @@ class AnimatedButtonPainter extends CustomPainter {
     if (buttonProgress.progressType ==
         AnimatedButtonProgressType.circularIndeterminate) {
       //不带进度
-      progressPaint.color = buttonProgress.foreground;
+      progressPaint.color = buttonProgress.foreground.withOpacity(statusValue);
       double progressRadius = offset / 2; //进度条半径
-      canvas.drawArc(
-          Rect.fromCircle(
-              center: Offset(size.width / 2, offset), radius: progressRadius),
-          2 * value * pi,
-          1.5 * pi,
-          false,
-          progressPaint);
+      Rect rect = Rect.fromCircle(center: Offset(0, 0), radius: progressRadius);
+      double startAngle = 0.0;
+      if (buttonProgress.foregroundGradient != null &&
+          buttonProgress.foregroundGradient is SweepGradient) {
+        SweepGradient sweepGradient =
+            buttonProgress.foregroundGradient! as SweepGradient;
+        startAngle = sweepGradient.startAngle;
+        progressPaint.shader = sweepGradient.createShader(rect);
+      }
       canvas.save();
       Path path = _getPath(progressRadius, 1.5 * pi);
+      path.addArc(rect, startAngle, 1.5 * pi);
       canvas.translate(size.width / 2, offset);
-      canvas.rotate(value * 2 * pi);
+      canvas.rotate(value * 2 * pi + startAngle);
       canvas.drawPath(path, progressPaint);
       canvas.restore();
     } else {
+      double radius = offset - offset / 3;
       //带进度
       Rect rect = Rect.fromCircle(
-          center: Offset(size.width / 2, offset), radius: offset - offset / 3);
-      if (buttonProgress.circularBackground != null) {
-        progressPaint.color = buttonProgress.circularBackground!;
-        canvas.drawArc(rect, 0, 2 * pi, false, progressPaint); //画进度条背景
+          center: Offset(size.width / 2, offset), radius: radius);
+      if (buttonProgress.circularBackgroundGradient != null &&
+          buttonProgress.circularBackgroundGradient is SweepGradient) {
+        //画进度条背景
+        SweepGradient sweepGradient =
+            buttonProgress.foregroundGradient! as SweepGradient;
+        progressPaint.shader =
+            buttonProgress.circularBackgroundGradient?.createShader(rect);
+        canvas.drawArc(
+            rect, sweepGradient.startAngle, 2 * pi, false, progressPaint);
+      } else if (buttonProgress.circularBackground != null) {
+        progressPaint.color =
+            buttonProgress.circularBackground!.withOpacity(statusValue);
+        canvas.drawArc(rect, 0, 2 * pi, false, progressPaint);
+      }
+      double startAngle = 0.0;
+      if (buttonProgress.foregroundGradient != null &&
+          buttonProgress.foregroundGradient is SweepGradient) {
+        SweepGradient sweepGradient =
+            buttonProgress.foregroundGradient! as SweepGradient;
+        startAngle = sweepGradient.startAngle;
+
+        progressPaint.shader = sweepGradient.createShader(rect);
       }
       if (progress > 0) {
-        progressPaint.color = buttonProgress.foreground;
+        progressPaint.color =
+            buttonProgress.foreground.withOpacity(statusValue);
         //让边界有弧形过渡
         progressPaint.strokeCap = StrokeCap.round;
         //画进度条
-        canvas.drawArc(rect, -0.5 * pi, progress / 100 * 2 * pi, false, progressPaint);
+        canvas.drawArc(
+            rect, startAngle, progress / 100 * 2 * pi, false, progressPaint);
       }
       //进度文字
       TextPainter textPainter = TextPainter();
       textPainter.textDirection = TextDirection.ltr;
       List<TextSpan> spanChildren = [
-        TextSpan(text: '$progress%', style: buttonProgress.textStyle)
+        TextSpan(text: '$progress%', style: buttonProgress.textStyle.apply(
+            color: buttonProgress.textStyle.color?.withOpacity(statusValue),
+            fontSizeFactor: statusValue))
       ];
       if (buttonProgress.prefix != null) {
         spanChildren.insert(
             0,
             TextSpan(
                 text: buttonProgress.prefix,
-                style: buttonProgress.prefixStyle));
+                style: buttonProgress.prefixStyle?.apply(
+                    color: buttonProgress.prefixStyle?.color?.withOpacity(statusValue),
+                    fontSizeFactor: statusValue)));
       }
       if (buttonProgress.suffix != null) {
         spanChildren.add(TextSpan(
-            text: buttonProgress.suffix, style: buttonProgress.suffixStyle));
+            text: buttonProgress.suffix, style: buttonProgress.suffixStyle?.apply(
+            color: buttonProgress.suffixStyle?.color?.withOpacity(statusValue),
+            fontSizeFactor: statusValue)));
       }
       textPainter.text = TextSpan(children: spanChildren);
       textPainter.textAlign = TextAlign.center;
@@ -108,10 +154,11 @@ class AnimatedButtonPainter extends CustomPainter {
 
   ///画线性进度
   void _drawLinearProgress(Canvas canvas, Size size) {
+    BorderRadius? borderRadius=buttonStatus.borderRadius;
     double offset = size.height / 2;
     progressPaint.style = PaintingStyle.fill;
     //画进度条
-    progressPaint.color = buttonProgress.foreground;
+    progressPaint.color = buttonProgress.foreground.withOpacity(statusValue);
     if (buttonProgress.progressType ==
         AnimatedButtonProgressType.linearIndeterminate) {
       //无进度显示
@@ -119,49 +166,60 @@ class AnimatedButtonPainter extends CustomPainter {
       double start = value * size.width;
       double end = start + length;
       if (end >= size.width) {
-        canvas.clipRRect(RRect.fromLTRBXY(
-            0.0, 0.0, size.width, size.height, offset, offset));
-        canvas.drawRRect(
-            RRect.fromLTRBXY(
-                0.0, 0.0, end - size.width, size.height, offset, offset),
-            progressPaint);
-        canvas.drawRRect(
-            RRect.fromLTRBXY(start, 0.0, end, size.height, offset, offset),
-            progressPaint);
+        canvas.clipRRect(_buildRRectFormBorderRadius(borderRadius, 0, 0, size.width, size.height, Radius.circular(offset)));
+        //画最左侧进度
+        RRect lRect = _buildRRectFormBorderRadius(borderRadius, 0, 0, end - size.width, size.height, Radius.circular(offset));
+        _drawGradientRect(
+            canvas, lRect, progressPaint, buttonProgress.foregroundGradient);
+
+        //画最右侧进度
+        RRect rRect = _buildRRectFormBorderRadius(borderRadius, start, 0, end, size.height, Radius.circular(offset));
+        _drawGradientRect(
+            canvas, rRect, progressPaint, buttonProgress.foregroundGradient);
       } else {
-        RRect rRect =
-            RRect.fromLTRBXY(start, 0.0, end, size.height, offset, offset);
-        canvas.drawRRect(rRect, progressPaint);
+        RRect rRect = _buildRRectFormBorderRadius(borderRadius, start, 0, end, size.height, Radius.circular(offset));
+        _drawGradientRect(
+            canvas, rRect, progressPaint, buttonProgress.foregroundGradient);
       }
     } else {
       //有进度显示
       double right = progress / 100 * size.width;
       if (progress > 0) {
         if (right < offset * 2) {
-          canvas.drawArc(Rect.fromLTWH(0.0, 0.0, size.height, size.height),
-              pi * 3 / 2, pi * 2, false, progressPaint);
+          Rect rect = Rect.fromLTWH(0.0, 0.0, size.height, size.height);
+          progressPaint.shader =
+              buttonProgress.foregroundGradient?.createShader(rect);
+          canvas.drawArc(rect, pi * 3 / 2, pi * 2, false, progressPaint);
         } else {
-          canvas.drawRRect(
-              RRect.fromLTRBXY(0.0, 0.0, right, size.height, offset, offset),
-              progressPaint);
+          _drawGradientRect(
+              canvas,
+              _buildRRectFormBorderRadius(borderRadius, 0, 0, right, size.height, Radius.circular(offset)),
+              progressPaint,
+              buttonProgress.foregroundGradient);
         }
       }
       //进度文字
       TextPainter textPainter = TextPainter();
       textPainter.textDirection = TextDirection.ltr;
       List<TextSpan> spanChildren = [
-        TextSpan(text: '$progress%', style: buttonProgress.textStyle)
+        TextSpan(text: '$progress%', style: buttonProgress.textStyle.apply(
+            color: buttonProgress.textStyle.color?.withOpacity(statusValue),
+            fontSizeFactor: statusValue))
       ];
       if (buttonProgress.prefix != null) {
         spanChildren.insert(
             0,
             TextSpan(
                 text: buttonProgress.prefix,
-                style: buttonProgress.prefixStyle));
+                style: buttonProgress.prefixStyle?.apply(
+                    color: buttonProgress.prefixStyle?.color?.withOpacity(statusValue),
+                    fontSizeFactor: statusValue)));
       }
       if (buttonProgress.suffix != null) {
         spanChildren.add(TextSpan(
-            text: buttonProgress.suffix, style: buttonProgress.suffixStyle));
+            text: buttonProgress.suffix, style: buttonProgress.suffixStyle?.apply(
+            color: buttonProgress.suffixStyle?.color?.withOpacity(statusValue),
+            fontSizeFactor: statusValue)));
       }
       textPainter.text = TextSpan(children: spanChildren);
       textPainter.textAlign = TextAlign.center;
@@ -194,43 +252,60 @@ class AnimatedButtonPainter extends CustomPainter {
     }
   }
 
+  ///画渐变色
+  void _drawGradientRect(
+      Canvas canvas, RRect rRect, Paint paint, Gradient? gradient) {
+    paint.shader = gradient?.createShader(rRect.outerRect);
+    canvas.drawRRect(rRect, paint);
+  }
+
   ///画背景
   void _drawBackground(Canvas canvas, Size size) {
-    double offset = size.height / 2;
-    RRect rRect =
-        RRect.fromLTRBXY(0.0, 0.0, size.width, size.height, offset, offset);
-    if (buttonStatus.borderRadius != null) {
-      //画圆角
-      Radius topLeft = buttonStatus.borderRadius!.topLeft;
-      Radius topRight = buttonStatus.borderRadius!.topRight;
-      Radius bottomRight = buttonStatus.borderRadius!.bottomRight;
-      Radius bottomLeft = buttonStatus.borderRadius!.bottomLeft;
-      rRect = RRect.fromLTRBAndCorners(0, 0, size.width, size.height,
-          topLeft: topLeft,
-          topRight: topRight,
-          bottomRight: bottomRight,
-          bottomLeft: bottomLeft);
-    }
+    //画圆角
+    RRect rRect = _buildRRectFormBorderRadius(buttonStatus.borderRadius, 0, 0, size.width, size.height, Radius.zero);
     buttonPaint.style = PaintingStyle.fill;
     buttonPaint.color = buttonStatus.buttonColor;
-    _drawShadowsRRect(canvas, rRect, buttonStatus.shadows,buttonPaint);
+    buttonPaint.shader = buttonStatus.gradient?.createShader(rRect.outerRect);
+    canvas.drawRRect(rRect, buttonPaint);
+    // _drawShadowsRRect(canvas, rRect, buttonStatus.shadows,buttonPaint);
     //画文字
-    TextPainter textPainter = TextPainter();
-    textPainter.textDirection = TextDirection.ltr;
-    textPainter.text =
-        TextSpan(text: buttonStatus.text, style: buttonStatus.textStyle);
-    textPainter.layout();
-    double textStarPositionX = (size.width - textPainter.size.width) / 2;
-    double textStarPositionY = (size.height - textPainter.size.height) / 2;
-    textPainter.paint(canvas, Offset(textStarPositionX, textStarPositionY));
+    if (buttonStatus.text.isNotEmpty&&(buttonProgress.isProgressOpacityAnim||buttonStatus.status!=AnimatedButtonStatus.loading)) {
+      TextPainter textPainter = TextPainter();
+      textPainter.textDirection = TextDirection.ltr;
+      TextStyle textStyle = buttonProgress.isProgressOpacityAnim?buttonStatus.textStyle.apply(
+          color: buttonStatus.textStyle.color?.withOpacity(1 - statusValue),
+          fontSizeFactor: 1 - statusValue) : buttonStatus.textStyle;
+      textPainter.text = TextSpan(
+          text: buttonStatus.text,
+          style: textStyle);
+      textPainter.layout();
+      double textStarPositionX = (size.width - textPainter.size.width) / 2;
+      double textStarPositionY = (size.height - textPainter.size.height) / 2;
+      textPainter.paint(canvas, Offset(textStarPositionX, textStarPositionY));
+    }
     //画边框
     if (buttonStatus.borderSide != null &&
         buttonStatus.borderSide != BorderSide.none) {
       buttonPaint.style = PaintingStyle.stroke;
       buttonPaint.strokeWidth = buttonStatus.borderSide!.width;
       buttonPaint.color = buttonStatus.borderSide!.color;
+      buttonPaint.shader = null;
       canvas.drawRRect(rRect, buttonPaint);
     }
+  }
+
+  ///构建圆角矩形
+  RRect _buildRRectFormBorderRadius(BorderRadius? borderRadius,double left,double top,double right,double bottom,Radius defaultRadius){
+    Radius topLeft = borderRadius?.topLeft ?? defaultRadius;
+    Radius topRight = borderRadius?.topRight ?? defaultRadius;
+    Radius bottomRight = borderRadius?.bottomRight ?? defaultRadius;
+    Radius bottomLeft = borderRadius?.bottomLeft ?? defaultRadius;
+    RRect rRect = RRect.fromLTRBAndCorners(left, top, right, bottom,
+        topLeft: topLeft,
+        topRight: topRight,
+        bottomRight: bottomRight,
+        bottomLeft: bottomLeft);
+    return rRect;
   }
 
   ///画等腰三角形
@@ -252,9 +327,10 @@ class AnimatedButtonPainter extends CustomPainter {
   }
 
   ///绘制带阴影的RRect
-  void _drawShadowsRRect(Canvas canvas, RRect rRect, List<BoxShadow>? shadows,Paint paint) {
-    if(shadows!=null){
-      Path path=Path()..addRRect(rRect);
+  void _drawShadowsRRect(
+      Canvas canvas, RRect rRect, List<BoxShadow>? shadows, Paint paint) {
+    if (shadows != null) {
+      Path path = Path()..addRRect(rRect);
       for (final BoxShadow shadow in shadows) {
         final Paint shadowPainter = shadow.toPaint();
         if (shadow.spreadRadius == 0) {

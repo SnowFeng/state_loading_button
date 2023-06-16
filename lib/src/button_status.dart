@@ -16,6 +16,7 @@ class ButtonStatus {
   final Color buttonColor;
   final BorderRadius? borderRadius;
   final BorderSide? borderSide;
+  final Gradient? gradient; //渐变色（会覆盖buttonColor）
   final bool isTapScale; //是否点击缩放
   final List<BoxShadow>? shadows; //阴影
 
@@ -29,8 +30,9 @@ class ButtonStatus {
     this.buttonColor = Colors.blue,
     this.borderRadius,
     this.borderSide,
+    this.gradient,
     this.shadows,
-    this.isTapScale=true
+    this.isTapScale=true,
   });
 
   ButtonStatus copyWith({
@@ -43,7 +45,9 @@ class ButtonStatus {
       Color? buttonColor,
       BorderRadius? borderRadius,
       BorderSide? borderSide,
+    Gradient? gradient,
         bool? isTapScale,
+        bool? isTextAnim,
     List<BoxShadow>? shadows}) {
     return ButtonStatus(
       width: width ?? this.width,
@@ -55,6 +59,7 @@ class ButtonStatus {
       buttonColor: buttonColor ?? this.buttonColor,
       borderRadius: borderRadius ?? this.borderRadius,
       borderSide: borderSide ?? this.borderSide,
+      gradient: gradient ?? this.gradient,
       isTapScale: isTapScale ?? this.isTapScale,
       shadows: shadows ?? this.shadows,
     );

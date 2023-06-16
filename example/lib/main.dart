@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:state_loading_button/state_loading_button.dart';
 import 'package:flutter/material.dart';
@@ -51,51 +52,58 @@ class _MyAppState extends State<MyApp> {
             progressBuilder: (button, progress) {
               switch (button.state) {
                 case 'normal':
-                  return const ButtonProgress(
-                      size: 13,
-                      dimension: 200,
+                  return ButtonProgress(
+                      size: 20,
+                      dimension: 250,
                       background: Colors.blue,
                       foreground: Colors.orangeAccent,
-                      shadows: [BoxShadow(color: Colors.purpleAccent,offset: Offset(0, 4),blurRadius: 5)],
+                      foregroundGradient: const LinearGradient(colors: [Colors.orangeAccent,Colors.pink]),
+                      backgroundGradient: const LinearGradient(colors: [Colors.blue,Colors.amber]),
+                      shadows: [const BoxShadow(color: Colors.purpleAccent,offset: Offset(0, 4),blurRadius: 5)],
                       prefix: '前缀',
                       prefixStyle:
-                          TextStyle(color: Colors.blueGrey, fontSize: 8),
+                          const TextStyle(color: Colors.blueGrey, fontSize: 10),
                       suffix: '后缀',
                       suffixStyle:
-                          TextStyle(color: Colors.blueAccent, fontSize: 8),
+                          const TextStyle(color: Colors.blueAccent, fontSize: 10),
                       textStyle:
-                          TextStyle(color: Colors.black, fontSize: 10),
+                          const TextStyle(color: Colors.white, fontSize: 15),
+                      borderRadius: BorderRadius.circular(5),
                       progressType:
                           AnimatedButtonProgressType.linearDeterminate);
                 case 'paused':
-                  return const ButtonProgress(
-                      prefix: '前缀很长\n',
+                  return ButtonProgress(
+                      textStyle: const TextStyle(color: Colors.redAccent, fontSize: 8),
+                      prefix: '前缀\n',
                       prefixStyle:
-                          TextStyle(color: Colors.black, fontSize: 8),
-                      suffix: '\n后缀很长',
-                      suffixStyle: TextStyle(
+                          const TextStyle(color: Colors.black, fontSize: 8),
+                      suffix: '\n后缀',
+                      suffixStyle: const TextStyle(
                           color: Colors.orangeAccent, fontSize: 8),
                       progressType:
                           AnimatedButtonProgressType.circularDeterminate,
-                      size: 5,
-                      dimension: 40,
-                      background: Colors.white,
-                      borderSide:
-                          BorderSide(color: Colors.redAccent, width: 5));
+                      foregroundGradient: const SweepGradient(colors: [Colors.yellow, Colors.pink,Colors.yellow],stops: [0.0,0.9,1]),
+                      circularBackground: Colors.blue,
+                      size: 10,
+                      dimension: 50,
+                      background: Theme.of(context).scaffoldBackgroundColor);
                 case 'complete':
                   return const ButtonProgress(
                       progressType:
                           AnimatedButtonProgressType.linearIndeterminate,
                       shadows: [BoxShadow(color: Colors.black,offset: Offset(0, 2),blurRadius: 5)],
-                      size: 10,
-                      dimension: 200);
+                      foregroundGradient: LinearGradient(colors: [Colors.yellow,Colors.red]),
+                      size: 10);
                 case 'error':
-                  return const ButtonProgress(
+                  return ButtonProgress(
                       progressType:
                           AnimatedButtonProgressType.circularIndeterminate,
-                      shadows: [BoxShadow(color: Colors.yellow,offset: Offset(0, 2),blurRadius: 5)],
-                      size: 5,
-                      dimension: 30);
+                      isProgressOpacityAnim: false,
+                      foregroundGradient: const SweepGradient(colors: [Colors.orange, Colors.purpleAccent],endAngle: 1.5*pi),
+                      shadows: [const BoxShadow(color: Colors.yellow,offset: Offset(0, 2),blurRadius: 5)],
+                      size: 8,
+                      borderRadius: BorderRadius.circular(5),
+                      dimension: 40);
                 default:
                   return progress;
               }
@@ -114,7 +122,8 @@ class _MyAppState extends State<MyApp> {
                         foreground: Color.lerp(
                             Colors.white, Colors.red, progress / 100),
                         background: Color.lerp(
-                            Colors.green, Colors.yellow, progress / 100));
+                            Colors.green, Colors.yellow, progress / 100)
+                    );
                     if (progress > 100) {
                       _statusNotifier.value='paused';
                       timer.cancel();
@@ -127,6 +136,9 @@ class _MyAppState extends State<MyApp> {
                   Timer.periodic(const Duration(milliseconds: 30), (timer) {
                     _progressNotifier.changeProgress(
                         progress: progress,
+                        dimension: 50.0+progress/100*20,
+                        size: 10.0+progress/100*10,
+                        textStyle: TextStyle.lerp(const TextStyle(color: Colors.black, fontSize: 8), const TextStyle(color: Colors.white, fontSize: 20), progress / 100),
                         foreground: Color.lerp(
                             Colors.yellow, Colors.white, progress / 100),
                         background: Color.lerp(
@@ -167,25 +179,28 @@ class _MyAppState extends State<MyApp> {
     text: 'click loading',
     textStyle: TextStyle(fontSize: 14.0, color: Colors.white),
     buttonColor: Colors.blue,
-    borderRadius: BorderRadius.all(Radius.circular(30)),
+    gradient: LinearGradient(colors: [Colors.pink,Colors.purple]),
+    borderRadius: BorderRadius.all(Radius.circular(18)),
     shadows: [BoxShadow(
         color: Colors.redAccent,
-        offset: Offset(0, 5),
-        blurRadius: 15
+        offset: Offset(0, 2),
+        blurRadius: 4
     )]
   );
 
   ///暂停
   static const ButtonStatus _paused = ButtonStatus(
-      width: 200,
+      width: 160,
       state: 'paused',
       status: AnimatedButtonStatus.button,
       text: 'Paused',
       textStyle: TextStyle(fontSize: 14.0, color: Colors.white),
       buttonColor: Colors.orangeAccent,
+      gradient: LinearGradient(colors: [Colors.orangeAccent,Colors.greenAccent]),
       borderRadius: BorderRadius.all(Radius.circular(12)),
       shadows: [BoxShadow(
           color: Colors.blue,
+          offset: Offset(0, 2),
           blurRadius: 8
       )]
   );
@@ -202,19 +217,25 @@ class _MyAppState extends State<MyApp> {
 
   ///完成
   static const ButtonStatus _complete = ButtonStatus(
-      width: 80,
+      width: 200,
       height: 40,
-      borderSide: BorderSide(color: Colors.black, width: 3),
+      isTapScale: false,
       state: 'complete',
       status: AnimatedButtonStatus.button,
       text: 'Complete',
       textStyle: TextStyle(fontSize: 14.0, color: Colors.white),
       buttonColor: Colors.greenAccent,
+      gradient: LinearGradient(colors: [Colors.greenAccent,Colors.blue]),
       borderRadius: BorderRadius.all(Radius.circular(12)),
+      shadows: [BoxShadow(
+          color: Colors.blue,
+          blurRadius: 8
+      )]
   );
 
   ///错误
   static const ButtonStatus _error = ButtonStatus(
+      width: 200,
       height: 50,
       borderSide: BorderSide(color: Colors.blue, width: 3),
       state: 'error',
@@ -222,6 +243,11 @@ class _MyAppState extends State<MyApp> {
       text: 'Error',
       textStyle: TextStyle(fontSize: 14.0, color: Colors.white),
       buttonColor: Colors.redAccent,
+      gradient: LinearGradient(colors: [Colors.redAccent,Colors.purpleAccent]),
       borderRadius: BorderRadius.all(Radius.circular(12)),
+      shadows: [BoxShadow(
+      color: Colors.blue,
+      blurRadius: 8
+  )]
   );
 }
