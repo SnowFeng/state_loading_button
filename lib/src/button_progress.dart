@@ -26,8 +26,8 @@ class ButtonProgress {
   final BorderRadius? borderRadius;//线性类型：进度条及背景圆角 ，圆形类型：不为空即设置背景为带圆角的矩形
   final double padding;//文字与进度条右边间距（线性类型）
   final BorderSide? borderSide;//边框
-  final Gradient? circularBackgroundGradient;//圆形进度条背景渐变色，//注意圆形进度时必须使用SweepGradient
-  final Gradient? foregroundGradient;//注意圆形进度时必须使用SweepGradient
+  final Gradient? circularBackgroundGradient;//圆形进度条背景渐变色
+  final Gradient? foregroundGradient;
   final Gradient? backgroundGradient;
   final List<BoxShadow>? shadows;//阴影
 

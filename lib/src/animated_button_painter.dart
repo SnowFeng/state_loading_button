@@ -29,11 +29,6 @@ class AnimatedButtonPainter extends CustomPainter {
     this.value = 0.0,
     this.statusValue = 1.0,
   }) {
-    assert(buttonProgress.foregroundGradient == null ||
-        !buttonProgress.isProgressCircular ||
-        (buttonProgress.isProgressCircular &&
-            (buttonProgress.foregroundGradient is SweepGradient ||
-                buttonProgress.circularBackgroundGradient is SweepGradient)));
     progress = progress > 100 ? 100 : progress;
     value = value > 1 ? 1 : value;
     statusValue = statusValue > 1 ? 1 : statusValue;
@@ -88,27 +83,30 @@ class AnimatedButtonPainter extends CustomPainter {
       //带进度
       Rect rect = Rect.fromCircle(
           center: Offset(size.width / 2, offset), radius: radius);
-      if (buttonProgress.circularBackgroundGradient != null &&
-          buttonProgress.circularBackgroundGradient is SweepGradient) {
-        //画进度条背景
-        SweepGradient sweepGradient =
-            buttonProgress.foregroundGradient! as SweepGradient;
+      //画进度条背景
+      if (buttonProgress.circularBackgroundGradient != null) {
+        SweepGradient sweepGradient = SweepGradient(colors: buttonProgress.foregroundGradient!.colors);
         progressPaint.shader =
-            buttonProgress.circularBackgroundGradient?.createShader(rect);
+            sweepGradient.createShader(rect);
         canvas.drawArc(
-            rect, sweepGradient.startAngle, 2 * pi, false, progressPaint);
+            rect, 0.0, 2 * pi, false, progressPaint);
       } else if (buttonProgress.circularBackground != null) {
         progressPaint.color =
             buttonProgress.circularBackground!.withOpacity(statusValue);
         canvas.drawArc(rect, 0, 2 * pi, false, progressPaint);
       }
       double startAngle = 0.0;
-      if (buttonProgress.foregroundGradient != null &&
-          buttonProgress.foregroundGradient is SweepGradient) {
-        SweepGradient sweepGradient =
-            buttonProgress.foregroundGradient! as SweepGradient;
+      if (buttonProgress.foregroundGradient != null) {
+        if(buttonProgress.foregroundGradient is SweepGradient){
+          startAngle = (buttonProgress.foregroundGradient! as SweepGradient).startAngle;
+        }
+        SweepGradient sweepGradient = SweepGradient(
+            colors: buttonProgress.foregroundGradient!.colors,
+            startAngle: startAngle,
+            endAngle: progress / 100 * 2 * pi,
+            transform: GradientRotation(
+                startAngle));
         startAngle = sweepGradient.startAngle;
-
         progressPaint.shader = sweepGradient.createShader(rect);
       }
       if (progress > 0) {
@@ -118,7 +116,7 @@ class AnimatedButtonPainter extends CustomPainter {
         progressPaint.strokeCap = StrokeCap.round;
         //画进度条
         canvas.drawArc(
-            rect, startAngle, progress / 100 * 2 * pi, false, progressPaint);
+            rect, startAngle+atan(progressPaint.strokeWidth / 2 / radius), progress / 100 * 2 * pi, false, progressPaint);
       }
       //进度文字
       TextPainter textPainter = TextPainter();

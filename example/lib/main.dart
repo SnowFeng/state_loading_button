@@ -82,7 +82,7 @@ class _MyAppState extends State<MyApp> {
                           color: Colors.orangeAccent, fontSize: 8),
                       progressType:
                           AnimatedButtonProgressType.circularDeterminate,
-                      foregroundGradient: const SweepGradient(colors: [Colors.yellow, Colors.pink,Colors.yellow],stops: [0.0,0.9,1]),
+                      foregroundGradient: const SweepGradient(colors: [Colors.yellow, Colors.pink],startAngle: -0.5*pi),
                       circularBackground: Colors.blue,
                       size: 10,
                       dimension: 50,
@@ -147,7 +147,7 @@ class _MyAppState extends State<MyApp> {
                     );
                     progress++;
                     if (progress > 100) {
-                      _statusNotifier.value='error';
+                      _statusNotifier.value='paused';
                       timer.cancel();
                     }
                   });
