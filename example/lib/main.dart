@@ -147,7 +147,7 @@ class _MyAppState extends State<MyApp> {
                     );
                     progress++;
                     if (progress > 100) {
-                      _statusNotifier.value='paused';
+                      _statusNotifier.value='error';
                       timer.cancel();
                     }
                   });

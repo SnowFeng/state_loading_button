@@ -201,10 +201,10 @@ class _AnimatedButtonState extends State<AnimatedButton>
       }
     }
     if (progress.dimension == null) {
-      //未设置dimension时：linear类型使用button的宽度，circular类型使用button高度
+      //未设置dimension时：linear类型使用button的宽度，circular类型使用button高度的一半
       progress = progress.copyWith(
           dimension:
-              progress.isProgressCircular ? button.height : button.width);
+              progress.isProgressCircular ? button.height/2 : button.width);
     }
     double endWidth = startWidth;
     double endHeight = startHeight;
