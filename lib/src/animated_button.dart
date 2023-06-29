@@ -1,20 +1,22 @@
 library fluwx;
 
-export 'button_progress_notifier.dart';
-export 'button_status.dart';
-export 'button_progress.dart';
-export 'button_state_notifier.dart';
+export 'notifier/button_progress_notifier.dart';
+export 'button/button_status.dart';
+export 'progress/button_progress.dart';
+export 'notifier/button_state_notifier.dart';
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:state_loading_button/src/progress/circular_progress.dart';
+import 'package:state_loading_button/src/progress/linear_progress.dart';
 
 import 'animated_button_painter.dart';
-import 'button_progress_notifier.dart';
-import 'button_status.dart';
-import 'button_progress.dart';
+import 'notifier/button_progress_notifier.dart';
+import 'button/button_status.dart';
+import 'progress/button_progress.dart';
 
-import 'button_state_notifier.dart';
+import 'notifier/button_state_notifier.dart';
 import 'clickable_scale_wrapper.dart';
 
 ///按钮点击事件
@@ -41,6 +43,7 @@ class AnimatedButton extends StatefulWidget {
   final Duration? statusChangeDuration; //状态变化动画时长
   final Duration? loadingDuration; //无进度加载动画单次时长
   final Curve statusCurve;
+  final Curve loadingCurve;
   final AnimatedButtonTap? onTap;
   final ButtonStateNotifier? stateNotifier;
   final ButtonProgressNotifier? buttonProgressNotifier;
@@ -57,6 +60,7 @@ class AnimatedButton extends StatefulWidget {
       this.statusChangeDuration = const Duration(milliseconds: 500),
       this.loadingDuration = const Duration(milliseconds: 1000),
       this.statusCurve = Curves.linear,
+      this.loadingCurve = Curves.linear,
       this.onTap,
       this.stateNotifier,
       this.buttonProgressNotifier})
@@ -70,7 +74,7 @@ class _AnimatedButtonState extends State<AnimatedButton>
     with TickerProviderStateMixin {
   ButtonStatus button = const ButtonStatus();
 
-  ButtonProgress progress = const ButtonProgress();
+  ButtonProgress progress = ButtonProgress.defaultProgress;
 
   //状态变化
   late final AnimationController _statusChangeController = AnimationController(
@@ -85,6 +89,8 @@ class _AnimatedButtonState extends State<AnimatedButton>
   Animation? _widthAnimation;
   Animation? _heightAnimation;
   Animation? _cornerAnimation;
+
+  late final Animation _loadingAnimation;
 
   ///状态变化动画时不能点击
   bool canClick = true;
@@ -101,11 +107,12 @@ class _AnimatedButtonState extends State<AnimatedButton>
     super.initState();
     button = widget.buttonBuilder.call(widget.initialState);
     widget.stateNotifier?.initState(button.state);
-    progress = widget.progressBuilder?.call(button, const ButtonProgress()) ??
-        const ButtonProgress();
+    progress = widget.progressBuilder?.call(button, ButtonProgress.defaultProgress) ??
+        ButtonProgress.defaultProgress;
     if (widget.buttonProgressNotifier != null) {
       widget.buttonProgressNotifier!.value = progress;
     }
+    _loadingAnimation = Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: widget.loadingCurve)).animate(_loadingController);
     widget.stateNotifier?.addStateChangeListener((state) {
       if (mounted) {
         _changeButton(state);
@@ -128,8 +135,11 @@ class _AnimatedButtonState extends State<AnimatedButton>
       if (status == AnimationStatus.forward ||
           status == AnimationStatus.reverse) {
         canClick = false;
-      } else {
+      } else {//回到按钮状态
         canClick = true;
+        if(_loadingController.isAnimating){
+          _loadingController.reset();
+        }
       }
       if (status == AnimationStatus.completed) {
         if (button.status == AnimatedButtonStatus.loading) {
@@ -149,7 +159,6 @@ class _AnimatedButtonState extends State<AnimatedButton>
       if (mounted) {
         setState(() {});
         if (button.status != AnimatedButtonStatus.loading) {
-          _loadingController.stop(canceled: false);
           _statusChangeController.reverse();
         }
       }
@@ -200,27 +209,30 @@ class _AnimatedButtonState extends State<AnimatedButton>
         startHeight = constraints.minHeight;
       }
     }
-    if (progress.dimension == null) {
-      //未设置dimension时：linear类型使用button的宽度，circular类型使用button高度的一半
-      progress = progress.copyWith(
-          dimension:
-              progress.isProgressCircular ? button.height/2 : button.width);
-    }
     double endWidth = startWidth;
     double endHeight = startHeight;
-    double dimension = progress.dimension!;
     double corner = startHeight / 2;
+    BorderRadius? progressRadius;
     if (progress.isProgressCircular) {
+      CircularProgress circularProgress = progress as CircularProgress;
+      if(circularProgress.radius == null){//未设置半径时：circular类型使用button高度的一半
+        progress = circularProgress= circularProgress.copyWith(radius: button.height/2);
+      }
       //圆形进度条
-      endWidth = dimension * 2;
-      endHeight = dimension * 2;
-      corner = dimension;
+      endWidth = circularProgress.radius! * 2;
+      endHeight = circularProgress.radius! * 2;
+      corner = circularProgress.radius!;
+      progressRadius = circularProgress.borderRadius??BorderRadius.all(Radius.circular(corner));
     } else {
-      endWidth = dimension;
-      endHeight = progress.size;
-      corner = progress.size / 2;
+      LinearProgress linearProgress = progress as LinearProgress;
+      if(linearProgress.width == null){//未设置宽度时：linear类型使用button的宽度
+        progress = linearProgress = linearProgress.copyWith(width: button.width);
+      }
+      endWidth = linearProgress.width!;
+      endHeight = linearProgress.height;
+      corner = linearProgress.height / 2;
+      progressRadius = linearProgress.borderRadius??BorderRadius.all(Radius.circular(corner));
     }
-    BorderRadius progressRadius = progress.borderRadius??BorderRadius.all(Radius.circular(corner));
     CurvedAnimation curved = CurvedAnimation(
         parent: _statusChangeController,
         curve: Interval(0.0, 1.0, curve: widget.statusCurve));
@@ -279,7 +291,7 @@ class _AnimatedButtonState extends State<AnimatedButton>
               ),
               buttonProgress: progress,
               progress: progress.progress,
-              value: _loadingController.value,
+              value: _loadingAnimation.value,
               statusValue: progress.isProgressOpacityAnim?_statusChangeController.value:1.0
           ),
         ),

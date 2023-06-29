@@ -52,9 +52,9 @@ class _MyAppState extends State<MyApp> {
             progressBuilder: (button, progress) {
               switch (button.state) {
                 case 'normal':
-                  return ButtonProgress(
-                      size: 20,
-                      dimension: 250,
+                  return LinearProgress(
+                      height: 20,
+                      width: 250,
                       background: Colors.blue,
                       foreground: Colors.orangeAccent,
                       foregroundGradient: const LinearGradient(colors: [Colors.orangeAccent,Colors.pink]),
@@ -70,9 +70,9 @@ class _MyAppState extends State<MyApp> {
                           const TextStyle(color: Colors.white, fontSize: 15),
                       borderRadius: BorderRadius.circular(5),
                       progressType:
-                          AnimatedButtonProgressType.linearDeterminate);
+                          ProgressType.determinate);
                 case 'paused':
-                  return ButtonProgress(
+                  return CircularProgress(
                       textStyle: const TextStyle(color: Colors.redAccent, fontSize: 8),
                       prefix: '前缀\n',
                       prefixStyle:
@@ -81,29 +81,31 @@ class _MyAppState extends State<MyApp> {
                       suffixStyle: const TextStyle(
                           color: Colors.orangeAccent, fontSize: 8),
                       progressType:
-                          AnimatedButtonProgressType.circularDeterminate,
-                      foregroundGradient: const SweepGradient(colors: [Colors.yellow, Colors.pink],startAngle: -0.5*pi),
+                          ProgressType.determinate,
+                      foregroundGradient: const SweepGradient(colors: [Colors.yellow, Colors.pink]),
                       circularBackground: Colors.blue,
                       size: 10,
-                      dimension: 50,
+                      radius: 50,
+                      startAngle: -0.2*pi,
+                      ratio: 0.8,
                       background: Theme.of(context).scaffoldBackgroundColor);
                 case 'complete':
-                  return const ButtonProgress(
+                  return const LinearProgress(
                       progressType:
-                          AnimatedButtonProgressType.linearIndeterminate,
+                          ProgressType.indeterminate,
                       shadows: [BoxShadow(color: Colors.black,offset: Offset(0, 2),blurRadius: 5)],
                       foregroundGradient: LinearGradient(colors: [Colors.yellow,Colors.red]),
-                      size: 10);
+                      height: 10);
                 case 'error':
-                  return ButtonProgress(
+                  return CircularProgress(
                       progressType:
-                          AnimatedButtonProgressType.circularIndeterminate,
-                      isProgressOpacityAnim: false,
-                      foregroundGradient: const SweepGradient(colors: [Colors.orange, Colors.purpleAccent],endAngle: 1.5*pi),
+                          ProgressType.indeterminate,
+                      foregroundGradient: const SweepGradient(colors: [Colors.orange, Colors.purpleAccent]),
                       shadows: [const BoxShadow(color: Colors.yellow,offset: Offset(0, 2),blurRadius: 5)],
                       size: 8,
+                      startAngle: -0.3*pi,
                       borderRadius: BorderRadius.circular(5),
-                      dimension: 40);
+                      radius: 40);
                 default:
                   return progress;
               }
@@ -117,7 +119,7 @@ class _MyAppState extends State<MyApp> {
                   int progress = 0;
                   Timer.periodic(const Duration(milliseconds: 30), (timer) {
                     progress++;
-                    _progressNotifier.changeProgress(
+                    _progressNotifier.linear(
                         progress: progress,
                         foreground: Color.lerp(
                             Colors.white, Colors.red, progress / 100),
@@ -134,16 +136,16 @@ class _MyAppState extends State<MyApp> {
                   _statusNotifier.value='loading';
                   int progress = 0;
                   Timer.periodic(const Duration(milliseconds: 30), (timer) {
-                    _progressNotifier.changeProgress(
+                    _progressNotifier.circular(
                         progress: progress,
-                        dimension: 50.0+progress/100*20,
+                        radius: 50.0+progress/100*20,
                         size: 10.0+progress/100*10,
                         textStyle: TextStyle.lerp(const TextStyle(color: Colors.black, fontSize: 8), const TextStyle(color: Colors.white, fontSize: 20), progress / 100),
                         foreground: Color.lerp(
                             Colors.yellow, Colors.white, progress / 100),
                         background: Color.lerp(
                             Colors.redAccent, Colors.blue, progress / 100),
-                        circularBackground: Color.lerp(Colors.pink, Colors.purple, progress / 100)
+                        circularBackground: Color.lerp(Colors.pink, Colors.purple, progress / 100),
                     );
                     progress++;
                     if (progress > 100) {

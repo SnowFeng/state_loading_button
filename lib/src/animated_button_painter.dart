@@ -1,9 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:state_loading_button/src/progress/circular_progress.dart';
+import 'package:state_loading_button/src/progress/linear_progress.dart';
 
-import 'button_progress.dart';
-import 'button_status.dart';
+import 'progress/button_progress.dart';
+import 'button/button_status.dart';
 
 class AnimatedButtonPainter extends CustomPainter {
   //无进度类型变化值
@@ -45,78 +47,102 @@ class AnimatedButtonPainter extends CustomPainter {
     }
     if (canDrawProgress) {
       if (buttonProgress.isProgressCircular) {
-        _drawCircleProgress(canvas, size);
+        _drawCircleProgress(canvas, size,buttonProgress as CircularProgress);
       } else {
-        _drawLinearProgress(canvas, size);
+        _drawLinearProgress(canvas, size,buttonProgress as LinearProgress);
       }
     }
   }
 
   ///画圆形进度
-  void _drawCircleProgress(Canvas canvas, Size size) {
+  void _drawCircleProgress(Canvas canvas, Size size,CircularProgress buttonProgress) {
     double offset = size.height / 2;
+    double radius = buttonProgress.progressType == ProgressType.indeterminate?offset/2:offset*2/3;//默认半径：无进度为控件半径一半，有进度为2/3
+    if(buttonProgress.ratio!=null&&buttonProgress.ratio!>0&&buttonProgress.ratio!<=1){
+      radius = offset*buttonProgress.ratio!;
+    }
+    double startAngle = buttonProgress.startAngle??0.0;
+    bool isReverse=buttonProgress.reverse;
     progressPaint.style = PaintingStyle.stroke;
     progressPaint.strokeWidth = buttonProgress.size;
-    if (buttonProgress.progressType ==
-        AnimatedButtonProgressType.circularIndeterminate) {
-      //不带进度
+    if(buttonProgress.strokeCap == StrokeCap.square){//不用这个，没啥用
+      progressPaint.strokeCap = StrokeCap.butt;
+    }else{
+      progressPaint.strokeCap = buttonProgress.strokeCap;
+    }
+    double gapRound=0.0;
+    if(progressPaint.strokeCap != StrokeCap.butt){
+      gapRound=atan(progressPaint.strokeWidth / 2 / radius);
+    }
+    if (buttonProgress.progressType == ProgressType.indeterminate) {//不带进度
       progressPaint.color = buttonProgress.foreground.withOpacity(statusValue);
-      double progressRadius = offset / 2; //进度条半径
-      Rect rect = Rect.fromCircle(center: Offset(0, 0), radius: progressRadius);
-      double startAngle = 0.0;
-      if (buttonProgress.foregroundGradient != null &&
-          buttonProgress.foregroundGradient is SweepGradient) {
-        SweepGradient sweepGradient =
-            buttonProgress.foregroundGradient! as SweepGradient;
-        startAngle = sweepGradient.startAngle;
+      double endAngle=1.5*pi;//进度结束弧度
+      double rotate=value*2*pi+startAngle;
+      Rect rect = Rect.fromCircle(center: Offset(0, 0), radius: radius);
+      if (buttonProgress.foregroundGradient != null) {
+        List<Color> colors=buttonProgress.foregroundGradient!.colors;
+        List<double>? stops=buttonProgress.foregroundGradient!.stops;
+        SweepGradient sweepGradient = SweepGradient(
+            startAngle: isReverse?0.5*pi:0.0,
+            colors: isReverse?colors.reversed.toList():colors,
+            endAngle: isReverse?2*pi:1.5*pi,
+            stops: isReverse?stops?.reversed.toList():stops,
+            tileMode: TileMode.clamp,
+            transform: GradientRotation(isReverse?gapRound:-gapRound)
+        );
         progressPaint.shader = sweepGradient.createShader(rect);
       }
       canvas.save();
-      Path path = _getPath(progressRadius, 1.5 * pi);
-      path.addArc(rect, startAngle, 1.5 * pi);
+      Path path = _getPath(radius, endAngle,buttonProgress.size,isReverse);
+      path.addArc(rect, isReverse?0.5*pi:0.0, 1.5*pi);
       canvas.translate(size.width / 2, offset);
-      canvas.rotate(value * 2 * pi + startAngle);
+      canvas.rotate(isReverse?-rotate:rotate);
       canvas.drawPath(path, progressPaint);
       canvas.restore();
     } else {
-      double radius = offset - offset / 3;
       //带进度
       Rect rect = Rect.fromCircle(
           center: Offset(size.width / 2, offset), radius: radius);
       //画进度条背景
       if (buttonProgress.circularBackgroundGradient != null) {
-        SweepGradient sweepGradient = SweepGradient(colors: buttonProgress.foregroundGradient!.colors);
+        SweepGradient sweepGradient;
+        if(buttonProgress.circularBackgroundGradient is SweepGradient){
+          sweepGradient = buttonProgress.circularBackgroundGradient! as SweepGradient;
+        }else{
+          sweepGradient= SweepGradient(colors: buttonProgress.foregroundGradient!.colors);
+        }
         progressPaint.shader =
             sweepGradient.createShader(rect);
-        canvas.drawArc(
-            rect, 0.0, 2 * pi, false, progressPaint);
+        canvas.drawCircle(Offset(size.width / 2, offset), radius, progressPaint);
       } else if (buttonProgress.circularBackground != null) {
         progressPaint.color =
             buttonProgress.circularBackground!.withOpacity(statusValue);
         canvas.drawArc(rect, 0, 2 * pi, false, progressPaint);
       }
-      double startAngle = 0.0;
-      if (buttonProgress.foregroundGradient != null) {
-        if(buttonProgress.foregroundGradient is SweepGradient){
-          startAngle = (buttonProgress.foregroundGradient! as SweepGradient).startAngle;
-        }
+      double sweepAngle=progress / 100 * 2 * pi;
+      double gradientStartAngle=isReverse?2*pi-sweepAngle:startAngle;
+      double gradientEndAngle=isReverse?2*pi:sweepAngle;
+      double progressStartAngle=isReverse?-startAngle-sweepAngle-gapRound:startAngle+gapRound;
+      if (buttonProgress.foregroundGradient != null&&gradientStartAngle<gradientEndAngle) {
+        List<Color> colors=buttonProgress.foregroundGradient!.colors;
+        List<double>? stops=buttonProgress.foregroundGradient!.stops;
         SweepGradient sweepGradient = SweepGradient(
-            colors: buttonProgress.foregroundGradient!.colors,
-            startAngle: startAngle,
-            endAngle: progress / 100 * 2 * pi,
+            colors: isReverse?colors.reversed.toList():colors,
+            startAngle: gradientStartAngle,
+            endAngle: gradientEndAngle,
+            stops: isReverse?stops?.reversed.toList():stops,
+            tileMode: TileMode.clamp,
             transform: GradientRotation(
-                startAngle));
-        startAngle = sweepGradient.startAngle;
+                isReverse?-startAngle:startAngle));
         progressPaint.shader = sweepGradient.createShader(rect);
       }
       if (progress > 0) {
         progressPaint.color =
             buttonProgress.foreground.withOpacity(statusValue);
-        //让边界有弧形过渡
-        progressPaint.strokeCap = StrokeCap.round;
+
         //画进度条
         canvas.drawArc(
-            rect, startAngle+atan(progressPaint.strokeWidth / 2 / radius), progress / 100 * 2 * pi, false, progressPaint);
+            rect, progressStartAngle, sweepAngle, false, progressPaint);
       }
       //进度文字
       TextPainter textPainter = TextPainter();
@@ -151,14 +177,14 @@ class AnimatedButtonPainter extends CustomPainter {
   }
 
   ///画线性进度
-  void _drawLinearProgress(Canvas canvas, Size size) {
+  void _drawLinearProgress(Canvas canvas, Size size,LinearProgress buttonProgress) {
     BorderRadius? borderRadius=buttonStatus.borderRadius;
     double offset = size.height / 2;
     progressPaint.style = PaintingStyle.fill;
     //画进度条
     progressPaint.color = buttonProgress.foreground.withOpacity(statusValue);
     if (buttonProgress.progressType ==
-        AnimatedButtonProgressType.linearIndeterminate) {
+        ProgressType.indeterminate) {
       //无进度显示
       double length = size.width / 3; //进度条长度
       double start = value * size.width;
@@ -307,18 +333,17 @@ class AnimatedButtonPainter extends CustomPainter {
   }
 
   ///画等腰三角形
-  Path _getPath(double radius, double radian) {
+  Path _getPath(double radius, double radian,double progressSize,bool isReverse) {
     Path path = Path();
-    double yPoint = sin(radian) * radius;
-    double xPoint = cos(radian) * radius;
-    double halfSide = buttonProgress.size * 0.3;
-
+    double halfSide = progressSize * 0.3;
+    double yPoint = isReverse?sin(radian) * radius+2*radius:sin(radian) * radius;
+    double xPoint = halfSide;
     path.moveTo(xPoint, yPoint + halfSide);
 
     path.lineTo(xPoint, yPoint - halfSide);
 
     double xVertex =
-        xPoint + sqrt(pow(buttonProgress.size * 0.5, 2) - pow(halfSide, 2));
+        xPoint + sqrt(pow(progressSize * 0.5, 2) - pow(halfSide, 2));
     path.lineTo(xVertex, yPoint);
     path.close();
     return path;
