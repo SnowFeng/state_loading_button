@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:state_loading_button/src/progress/circular_progress.dart';
+import 'package:state_loading_button/src/progress/rectangle_progress.dart';
 
 enum ProgressType {
   indeterminate, //无进度
@@ -7,7 +8,8 @@ enum ProgressType {
 }
 
 abstract class ButtonProgress {
-  final int progress;
+  final double progress;//进度值，最高100
+  final int progressReserve;//进度值保留几位小数
   final ProgressType progressType;
   final Color foreground;
   final Color background;
@@ -25,7 +27,8 @@ abstract class ButtonProgress {
   static ButtonProgress defaultProgress=const CircularProgress();
 
   const ButtonProgress({
-    this.progress = 0,
+    this.progress = 0.0,
+    this.progressReserve = 1,
     this.progressType = ProgressType.indeterminate,
     this.foreground = Colors.orange,
     this.background = Colors.blueAccent,
@@ -47,6 +50,7 @@ abstract class ButtonProgress {
   ///是否是无进度类型
   bool get isIndeterminate => progressType == ProgressType.indeterminate;
 
-  bool get isProgressCircular => this is CircularProgress;
+  ///是否为圆形或矩形进度
+  bool get isBoxProgress => this is CircularProgress||this is RectangleProgress;
 
 }

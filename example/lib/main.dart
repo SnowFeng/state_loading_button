@@ -42,6 +42,8 @@ class _MyAppState extends State<MyApp> {
                   return _normal;
                 case 'paused':
                   return _paused;
+                case 'cancel':
+                  return _canceled;
                 case 'complete':
                   return _complete;
                 case 'error':
@@ -89,6 +91,15 @@ class _MyAppState extends State<MyApp> {
                       startAngle: -0.2*pi,
                       ratio: 0.8,
                       background: Theme.of(context).scaffoldBackgroundColor);
+                case 'cancel':
+                  return RectangleProgress(
+                    progressType: ProgressType.determinate,
+                    borderRadius: BorderRadius.circular(12),
+                    indeterminateText: '无进度值',
+                    textStyle: const TextStyle(color: Colors.white,fontSize: 12),
+                    size: 5,
+                    progressBackground: Colors.purpleAccent,
+                  );
                 case 'complete':
                   return const LinearProgress(
                       progressType:
@@ -103,7 +114,6 @@ class _MyAppState extends State<MyApp> {
                       foregroundGradient: const SweepGradient(colors: [Colors.orange, Colors.purpleAccent]),
                       shadows: [const BoxShadow(color: Colors.yellow,offset: Offset(0, 2),blurRadius: 5)],
                       size: 8,
-                      startAngle: -0.3*pi,
                       borderRadius: BorderRadius.circular(5),
                       radius: 40);
                 default:
@@ -116,7 +126,7 @@ class _MyAppState extends State<MyApp> {
               switch (button.state) {
                 case 'normal':
                   _statusNotifier.value='loading';
-                  int progress = 0;
+                  double progress = 0;
                   Timer.periodic(const Duration(milliseconds: 30), (timer) {
                     progress++;
                     _progressNotifier.linear(
@@ -134,7 +144,7 @@ class _MyAppState extends State<MyApp> {
                   break;
                 case 'paused':
                   _statusNotifier.value='loading';
-                  int progress = 0;
+                  double progress = 0;
                   Timer.periodic(const Duration(milliseconds: 30), (timer) {
                     _progressNotifier.circular(
                         progress: progress,
@@ -148,6 +158,20 @@ class _MyAppState extends State<MyApp> {
                         circularBackground: Color.lerp(Colors.pink, Colors.purple, progress / 100),
                     );
                     progress++;
+                    if (progress > 100) {
+                      _statusNotifier.value='cancel';
+                      timer.cancel();
+                    }
+                  });
+                  break;
+                case 'cancel':
+                  _statusNotifier.value='loading';
+                  double progress = 0;
+                  Timer.periodic(const Duration(milliseconds: 10), (timer) {
+                    progress+=0.1;
+                    _progressNotifier.rectangle(
+                        progress: progress
+                    );
                     if (progress > 100) {
                       _statusNotifier.value='error';
                       timer.cancel();
@@ -209,7 +233,8 @@ class _MyAppState extends State<MyApp> {
 
   ///取消
   static const ButtonStatus _canceled = ButtonStatus(
-      state: 'canceled',
+      width: 200,
+      state: 'cancel',
       status: AnimatedButtonStatus.button,
       text: 'Canceled',
       textStyle: TextStyle(fontSize: 14.0, color: Colors.white),

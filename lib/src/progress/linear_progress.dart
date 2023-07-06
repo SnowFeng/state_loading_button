@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:state_loading_button/src/animated_button.dart';
 
+///线性进度条
 class LinearProgress extends ButtonProgress {
   final bool isTextInner; //文字是否在进度条内
   final bool isTextFollowed; //文字是否跟随进度条移动
@@ -8,6 +9,7 @@ class LinearProgress extends ButtonProgress {
   final double? width; //进度条长度
   final BorderRadius? borderRadius; //进度条及背景圆角
   final double padding; //文字与进度条右边间距
+  final double? indicatorRatio; //无进度类型，进度长度比例(默认取1/3)
 
   const LinearProgress({
     this.isTextInner = true,
@@ -16,7 +18,9 @@ class LinearProgress extends ButtonProgress {
     this.width,
     this.borderRadius,
     this.padding = 5,
+    this.indicatorRatio,
     super.progress,
+    super.progressReserve,
     super.progressType,
     super.foreground,
     super.background,
@@ -33,7 +37,8 @@ class LinearProgress extends ButtonProgress {
   });
 
   LinearProgress copyWith({
-    int? progress,
+    double? progress,
+    int? progressReserve,
     ProgressType? progressType,
     Color? foreground,
     Color? background,
@@ -49,6 +54,7 @@ class LinearProgress extends ButtonProgress {
     BorderRadius? borderRadius,
     double? width,
     double? padding,
+    double? indicatorRatio,
     BorderSide? borderSide,
     Gradient? foregroundGradient,
     Gradient? backgroundGradient,
@@ -56,6 +62,7 @@ class LinearProgress extends ButtonProgress {
   }){
     return LinearProgress(
       progress: progress ??this.progress,
+      progressReserve: progressReserve ??this.progressReserve,
       progressType: progressType ??this.progressType,
       foreground: foreground ??this.foreground,
       background: background ??this.background,
@@ -70,6 +77,7 @@ class LinearProgress extends ButtonProgress {
       height: height ?? this.height,
       width: width ?? this.width,
       padding: padding ?? this.padding,
+      indicatorRatio: indicatorRatio ?? this.indicatorRatio,
       borderRadius: borderRadius ?? this.borderRadius,
       borderSide: borderSide?? this.borderSide,
       foregroundGradient: foregroundGradient  ??this.foregroundGradient,

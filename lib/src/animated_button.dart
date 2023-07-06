@@ -10,6 +10,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:state_loading_button/src/progress/circular_progress.dart';
 import 'package:state_loading_button/src/progress/linear_progress.dart';
+import 'package:state_loading_button/src/progress/rectangle_progress.dart';
 
 import 'animated_button_painter.dart';
 import 'notifier/button_progress_notifier.dart';
@@ -213,16 +214,29 @@ class _AnimatedButtonState extends State<AnimatedButton>
     double endHeight = startHeight;
     double corner = startHeight / 2;
     BorderRadius? progressRadius;
-    if (progress.isProgressCircular) {
-      CircularProgress circularProgress = progress as CircularProgress;
-      if(circularProgress.radius == null){//未设置半径时：circular类型使用button高度的一半
-        progress = circularProgress= circularProgress.copyWith(radius: button.height/2);
+    if (progress.isBoxProgress) {
+      if(progress is CircularProgress){//圆形进度条
+        CircularProgress circularProgress = progress as CircularProgress;
+        if(circularProgress.radius == null){//未设置半径时：circular类型使用button高度的一半
+          progress = circularProgress= circularProgress.copyWith(radius: button.height/2);
+        }
+        endWidth = circularProgress.radius! * 2;
+        endHeight = circularProgress.radius! * 2;
+        corner = circularProgress.radius!;
+        progressRadius = circularProgress.borderRadius??BorderRadius.all(Radius.circular(corner));
       }
-      //圆形进度条
-      endWidth = circularProgress.radius! * 2;
-      endHeight = circularProgress.radius! * 2;
-      corner = circularProgress.radius!;
-      progressRadius = circularProgress.borderRadius??BorderRadius.all(Radius.circular(corner));
+      if(progress is RectangleProgress){//矩形进度条
+        RectangleProgress rectangleProgress=progress as RectangleProgress;
+        if(rectangleProgress.width==null){//宽高未设置时，使用button宽高
+          progress = rectangleProgress= rectangleProgress.copyWith(width: button.width);
+        }
+        if(rectangleProgress.height == null){
+          progress = rectangleProgress= rectangleProgress.copyWith(height: button.height);
+        }
+        endWidth = rectangleProgress.width!;
+        endHeight = rectangleProgress.height!;
+        progressRadius = rectangleProgress.borderRadius??BorderRadius.all(Radius.zero);
+      }
     } else {
       LinearProgress linearProgress = progress as LinearProgress;
       if(linearProgress.width == null){//未设置宽度时：linear类型使用button的宽度

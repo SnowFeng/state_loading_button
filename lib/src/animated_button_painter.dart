@@ -1,8 +1,10 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:state_loading_button/src/progress/circular_progress.dart';
 import 'package:state_loading_button/src/progress/linear_progress.dart';
+import 'package:state_loading_button/src/progress/rectangle_progress.dart';
 
 import 'progress/button_progress.dart';
 import 'button/button_status.dart';
@@ -12,7 +14,7 @@ class AnimatedButtonPainter extends CustomPainter {
   double value;
 
   //进度值
-  int progress;
+  double progress;
 
   double statusValue;
 
@@ -27,7 +29,7 @@ class AnimatedButtonPainter extends CustomPainter {
   AnimatedButtonPainter({
     required this.buttonStatus,
     required this.buttonProgress,
-    this.progress = 0,
+    this.progress = 0.0,
     this.value = 0.0,
     this.statusValue = 1.0,
   }) {
@@ -46,9 +48,11 @@ class AnimatedButtonPainter extends CustomPainter {
       canDrawProgress = buttonStatus.status == AnimatedButtonStatus.loading;
     }
     if (canDrawProgress) {
-      if (buttonProgress.isProgressCircular) {
+      if (buttonProgress is CircularProgress) {
         _drawCircleProgress(canvas, size,buttonProgress as CircularProgress);
-      } else {
+      } else if(buttonProgress is RectangleProgress){
+        _drawRectangleProgress(canvas, size,buttonProgress as RectangleProgress);
+      }else{
         _drawLinearProgress(canvas, size,buttonProgress as LinearProgress);
       }
     }
@@ -58,8 +62,9 @@ class AnimatedButtonPainter extends CustomPainter {
   void _drawCircleProgress(Canvas canvas, Size size,CircularProgress buttonProgress) {
     double offset = size.height / 2;
     double radius = buttonProgress.progressType == ProgressType.indeterminate?offset/2:offset*2/3;//默认半径：无进度为控件半径一半，有进度为2/3
-    if(buttonProgress.ratio!=null&&buttonProgress.ratio!>0&&buttonProgress.ratio!<=1){
-      radius = offset*buttonProgress.ratio!;
+    double? radio=buttonProgress.ratio;
+    if(radio!=null&&radio>0&&radio<=1){
+      radius = offset*radio;
     }
     double startAngle = buttonProgress.startAngle??0.0;
     bool isReverse=buttonProgress.reverse;
@@ -76,16 +81,16 @@ class AnimatedButtonPainter extends CustomPainter {
     }
     if (buttonProgress.progressType == ProgressType.indeterminate) {//不带进度
       progressPaint.color = buttonProgress.foreground.withOpacity(statusValue);
-      double endAngle=1.5*pi;//进度结束弧度
+      double endAngle=buttonProgress.sweepAngle??1.5*pi;//进度结束弧度
       double rotate=value*2*pi+startAngle;
       Rect rect = Rect.fromCircle(center: Offset(0, 0), radius: radius);
       if (buttonProgress.foregroundGradient != null) {
         List<Color> colors=buttonProgress.foregroundGradient!.colors;
         List<double>? stops=buttonProgress.foregroundGradient!.stops;
         SweepGradient sweepGradient = SweepGradient(
-            startAngle: isReverse?0.5*pi:0.0,
+            startAngle: isReverse?2*pi-endAngle:0.0,
             colors: isReverse?colors.reversed.toList():colors,
-            endAngle: isReverse?2*pi:1.5*pi,
+            endAngle: isReverse?2*pi:endAngle,
             stops: isReverse?stops?.reversed.toList():stops,
             tileMode: TileMode.clamp,
             transform: GradientRotation(isReverse?gapRound:-gapRound)
@@ -94,7 +99,7 @@ class AnimatedButtonPainter extends CustomPainter {
       }
       canvas.save();
       Path path = _getPath(radius, endAngle,buttonProgress.size,isReverse);
-      path.addArc(rect, isReverse?0.5*pi:0.0, 1.5*pi);
+      path.addArc(rect, isReverse?2*pi-endAngle:0.0, endAngle);
       canvas.translate(size.width / 2, offset);
       canvas.rotate(isReverse?-rotate:rotate);
       canvas.drawPath(path, progressPaint);
@@ -109,7 +114,7 @@ class AnimatedButtonPainter extends CustomPainter {
         if(buttonProgress.circularBackgroundGradient is SweepGradient){
           sweepGradient = buttonProgress.circularBackgroundGradient! as SweepGradient;
         }else{
-          sweepGradient= SweepGradient(colors: buttonProgress.foregroundGradient!.colors);
+          sweepGradient= SweepGradient(colors: buttonProgress.circularBackgroundGradient!.colors);
         }
         progressPaint.shader =
             sweepGradient.createShader(rect);
@@ -123,10 +128,11 @@ class AnimatedButtonPainter extends CustomPainter {
       double gradientStartAngle=isReverse?2*pi-sweepAngle:startAngle;
       double gradientEndAngle=isReverse?2*pi:sweepAngle;
       double progressStartAngle=isReverse?-startAngle-sweepAngle-gapRound:startAngle+gapRound;
+      SweepGradient? sweepGradient;
       if (buttonProgress.foregroundGradient != null&&gradientStartAngle<gradientEndAngle) {
         List<Color> colors=buttonProgress.foregroundGradient!.colors;
         List<double>? stops=buttonProgress.foregroundGradient!.stops;
-        SweepGradient sweepGradient = SweepGradient(
+        sweepGradient = SweepGradient(
             colors: isReverse?colors.reversed.toList():colors,
             startAngle: gradientStartAngle,
             endAngle: gradientEndAngle,
@@ -134,8 +140,8 @@ class AnimatedButtonPainter extends CustomPainter {
             tileMode: TileMode.clamp,
             transform: GradientRotation(
                 isReverse?-startAngle:startAngle));
-        progressPaint.shader = sweepGradient.createShader(rect);
       }
+      progressPaint.shader = sweepGradient?.createShader(rect);
       if (progress > 0) {
         progressPaint.color =
             buttonProgress.foreground.withOpacity(statusValue);
@@ -148,7 +154,7 @@ class AnimatedButtonPainter extends CustomPainter {
       TextPainter textPainter = TextPainter();
       textPainter.textDirection = TextDirection.ltr;
       List<TextSpan> spanChildren = [
-        TextSpan(text: '$progress%', style: buttonProgress.textStyle.apply(
+        TextSpan(text: '${progress.toStringAsFixed(buttonProgress.progressReserve)}%', style: buttonProgress.textStyle.apply(
             color: buttonProgress.textStyle.color?.withOpacity(statusValue),
             fontSizeFactor: statusValue))
       ];
@@ -186,7 +192,7 @@ class AnimatedButtonPainter extends CustomPainter {
     if (buttonProgress.progressType ==
         ProgressType.indeterminate) {
       //无进度显示
-      double length = size.width / 3; //进度条长度
+      double length = size.width*(buttonProgress.indicatorRatio??1 / 3); //进度条长度
       double start = value * size.width;
       double end = start + length;
       if (end >= size.width) {
@@ -226,7 +232,7 @@ class AnimatedButtonPainter extends CustomPainter {
       TextPainter textPainter = TextPainter();
       textPainter.textDirection = TextDirection.ltr;
       List<TextSpan> spanChildren = [
-        TextSpan(text: '$progress%', style: buttonProgress.textStyle.apply(
+        TextSpan(text: '${progress.toStringAsFixed(buttonProgress.progressReserve)}%', style: buttonProgress.textStyle.apply(
             color: buttonProgress.textStyle.color?.withOpacity(statusValue),
             fontSizeFactor: statusValue))
       ];
@@ -274,6 +280,219 @@ class AnimatedButtonPainter extends CustomPainter {
       }
       textPainter.paint(canvas, Offset(textStarPositionX, textStarPositionY));
     }
+  }
+
+  ///画矩形路径的进度条
+  void _drawRectangleProgress(Canvas canvas, Size size,RectangleProgress buttonProgress){
+    BorderRadius? borderRadius=buttonProgress.borderRadius;
+    bool reverse=buttonProgress.reverse;
+    bool indeterminate=buttonProgress.progressType == ProgressType.indeterminate;
+
+    RRect rRect = _buildRRectFormBorderRadius(borderRadius, 0, 0, size.width, size.height, Radius.zero);
+    progressPaint.style = PaintingStyle.stroke;
+    progressPaint.strokeWidth = buttonProgress.size;
+
+    //画进度条背景
+    if (buttonProgress.progressBackgroundGradient != null) {
+      progressPaint.shader =
+          buttonProgress.progressBackgroundGradient!.createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      canvas.drawRRect(rRect, progressPaint);
+    } else if (buttonProgress.progressBackground != null) {
+      progressPaint.color =
+          buttonProgress.progressBackground!.withOpacity(statusValue);
+      canvas.drawRRect(rRect, progressPaint);
+    }
+    if(buttonProgress.strokeCap == StrokeCap.square){//不用这个，没啥用
+      progressPaint.strokeCap = StrokeCap.butt;
+    }else{
+      progressPaint.strokeCap = buttonProgress.strokeCap;
+    }
+    progressPaint.color = buttonProgress.foreground.withOpacity(statusValue);
+    Radius? topLeft=borderRadius?.topLeft;
+    Radius? topRight=borderRadius?.topRight;
+    Radius? bottomRight=borderRadius?.bottomRight;
+    Radius? bottomLeft=borderRadius?.bottomLeft;
+
+    double topLeftX=(topLeft?.x ?? 0)>size.height/2?size.height/2:(topLeft?.x ?? 0);
+    double topRightX=(topRight?.x ?? 0)>size.height/2?size.height/2:(topRight?.x ?? 0);
+    double bottomRightX=(bottomRight?.x ?? 0)>size.height/2?size.height/2:(bottomRight?.x ?? 0);
+    double bottomLeftX=(bottomLeft?.x ?? 0)>size.height/2?size.height/2:(bottomLeft?.x ?? 0);
+
+    double topLeftArc=0.5*pi*topLeftX;
+    double topRightArc=0.5*pi*topRightX;
+    double bottomRightArc=0.5*pi*bottomRightX;
+    double bottomLeftArc=0.5*pi*bottomLeftX;
+
+    //周长
+    double perimeter = size.width * 2 +
+        size.height * 2 -
+        2 * topLeftX -
+        2 * topRightX -
+        2 * bottomRightX -
+        2 * bottomLeftX +
+        topLeftArc +
+        topRightArc +
+        bottomRightArc +
+        bottomLeftArc;
+
+    double indicatorWidth=(buttonProgress.indicatorRatio??1/3)*size.width;
+
+    String text='';
+    //进度路径
+    Path path=Path();
+    double distance;
+    if(indeterminate){
+      distance = value*perimeter;
+    }else{
+      distance = progress/100*perimeter;
+    }
+    double topLength = size.width - topLeftX - topRightX;
+    double topEnd=topLength+topRightArc;
+    double rightLength=size.height - topRightX- bottomRightX;
+    double rightEnd=topEnd+rightLength+bottomRightArc;
+    double bottomLength= size.width -bottomLeftX - bottomRightX;
+    double bottomEnd=rightEnd+bottomLength+bottomLeftArc;
+    double leftLength= size.height- topLeftX -bottomLeftX;
+    double leftEnd=bottomEnd+leftLength+topLeftArc;
+
+    if(indeterminate){//无进度类型首尾衔接
+      if(distance<indicatorWidth){
+        if(indicatorWidth-topLeftArc>distance){
+          double relative = indicatorWidth-topLeftArc-distance;
+          path.moveTo(0, relative+topLeftX);
+          path.relativeLineTo(0, -relative);
+        }
+        if(topLeft!=null){
+          double radio=(indicatorWidth-distance)/topLeftArc;
+          path.arcTo(_buildRectangleRadiusRect(topLeft, 3, size), 1.5*pi-0.5*pi*(radio>1?1:radio), 0.5*pi*(radio>1?1:radio),false);
+        }
+      }else{
+        path.moveTo(topLeftX, 0);
+      }
+      double length=distance>topLength?topLength:distance;
+      path.relativeLineTo(length, 0);
+    }else{//top
+      path.moveTo(topLeftX, 0);
+      double length=distance>topLength?topLength:distance;
+      path.relativeLineTo(length, 0);
+    }
+    if(distance>topLength){//right
+      if(topRight!=null){
+        double radio=(distance-topLength)/topRightArc;
+        path.arcTo(_buildRectangleRadiusRect(topRight, 0, size), -0.5*pi, 0.5*pi*(radio>1?1:radio),false);
+      }
+      if(distance>topEnd){
+        double relative=distance-topEnd;
+        double length=relative>rightLength?rightLength:relative;
+        path.relativeLineTo(0, length);
+      }
+    }
+    if(distance>topEnd+rightLength){//bottom
+      if(bottomRight!=null){
+        double radio=(distance - topEnd - rightLength)/bottomRightArc;
+        path.arcTo(_buildRectangleRadiusRect(bottomRight, 1, size), 0, 0.5*pi*(radio>1?1:radio),false);
+      }
+      if(distance>rightEnd){
+        double relative=distance-rightEnd;
+        double length=relative>bottomLength?bottomLength:relative;
+        path.relativeLineTo(-length, 0);
+      }
+    }
+    if(distance>rightEnd+bottomLength){//left
+      if(bottomLeft!=null){
+        double radio=(distance - rightEnd - bottomLength)/bottomLeftArc;
+        path.arcTo(_buildRectangleRadiusRect(bottomLeft, 2, size), 0.5*pi, 0.5*pi*(radio>1?1:radio),false);
+      }
+      if(distance>bottomEnd){
+        double relative=distance-bottomEnd;
+        double length=relative>leftLength?leftLength:relative;
+        path.relativeLineTo(0, -length);
+      }
+    }
+    if(distance>bottomEnd+leftLength){
+      if(topLeft!=null){
+        double radio=(distance-bottomEnd-leftLength)/topLeftArc;
+        path.arcTo(_buildRectangleRadiusRect(topLeft, 3, size), pi, 0.5*pi*(radio>1?1:radio),false);
+      }
+    }
+
+    if(reverse){
+      Path newPath=Path();
+      path.computeMetrics().forEach((element) {
+        newPath.addPath(element.extractPath(0, element.length), Offset(size.width,0),matrix4: Matrix4.rotationY(pi).storage);//借助变换实现反转
+      });
+      path = newPath;
+    }
+    //无进度类型
+    if(indeterminate){
+      text = buttonProgress.indeterminateText??'';
+      path.computeMetrics().forEach((element) {//截取固定长度的path
+        double start=element.length-indicatorWidth;
+        double end=element.length;
+        path = Path.from(element.extractPath(start, end));
+      });
+    }else{
+      text='${progress.toStringAsFixed(buttonProgress.progressReserve)}%';
+    }
+    progressPaint.shader =
+        buttonProgress.foregroundGradient?.createShader(path.getBounds());
+    canvas.drawPath(path, progressPaint);
+    //进度文字
+    TextPainter textPainter = TextPainter();
+    textPainter.textDirection = TextDirection.ltr;
+    List<TextSpan> spanChildren = [
+      TextSpan(text: text, style: buttonProgress.textStyle.apply(
+          color: buttonProgress.textStyle.color?.withOpacity(statusValue),
+          fontSizeFactor: statusValue))
+    ];
+    if (buttonProgress.prefix != null) {
+      spanChildren.insert(
+          0,
+          TextSpan(
+              text: buttonProgress.prefix,
+              style: buttonProgress.prefixStyle?.apply(
+                  color: buttonProgress.prefixStyle?.color?.withOpacity(statusValue),
+                  fontSizeFactor: statusValue)));
+    }
+    if (buttonProgress.suffix != null) {
+      spanChildren.add(TextSpan(
+          text: buttonProgress.suffix, style: buttonProgress.suffixStyle?.apply(
+          color: buttonProgress.suffixStyle?.color?.withOpacity(statusValue),
+          fontSizeFactor: statusValue)));
+    }
+    textPainter.text = TextSpan(children: spanChildren);
+    textPainter.textAlign = TextAlign.center;
+    textPainter.layout();
+    double textStarPositionX = (size.width - textPainter.size.width) / 2;
+    double textStarPositionY = (size.height - textPainter.size.height) / 2;
+    textPainter.paint(canvas, Offset(textStarPositionX, textStarPositionY));
+  }
+
+  Rect _buildRectangleRadiusRect(Radius? radius,int type,Size size){//topRight:0 bottomRight:1 bottomLeft:2 topLeft:3
+    if(radius==null){
+      return Rect.zero;
+    }
+    double left=0;
+    double top=0;
+    double radiusX=radius.x>size.height/2?size.height/2:radius.x;
+    final double x=radiusX*2;
+    switch(type){
+      case 0:
+        left = size.width-x;
+        break;
+      case 1:
+        left = size.width-x;
+        top = size.height - x;
+        break;
+      case 2:
+        top = size.height - x;
+        break;
+      case 3:
+        top = 0;
+        left = 0;
+        break;
+    }
+   return Rect.fromLTWH(left, top, x, x);
   }
 
   ///画渐变色
@@ -336,7 +555,7 @@ class AnimatedButtonPainter extends CustomPainter {
   Path _getPath(double radius, double radian,double progressSize,bool isReverse) {
     Path path = Path();
     double halfSide = progressSize * 0.3;
-    double yPoint = isReverse?sin(radian) * radius+2*radius:sin(radian) * radius;
+    double yPoint = 0;
     double xPoint = halfSide;
     path.moveTo(xPoint, yPoint + halfSide);
 
@@ -346,6 +565,9 @@ class AnimatedButtonPainter extends CustomPainter {
         xPoint + sqrt(pow(progressSize * 0.5, 2) - pow(halfSide, 2));
     path.lineTo(xVertex, yPoint);
     path.close();
+    Matrix4 m4 = Matrix4.translationValues(radius*cos(radian),isReverse?-radius*sin(radian):radius*sin(radian),0);
+    m4.setRotationZ(isReverse?-0.5*pi-radian:0.5*pi+radian);
+    path = path.transform(m4.storage);
     return path;
   }
 

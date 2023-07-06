@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:state_loading_button/src/progress/circular_progress.dart';
 import 'package:state_loading_button/src/progress/linear_progress.dart';
+import 'package:state_loading_button/src/progress/rectangle_progress.dart';
 
 import '../progress/button_progress.dart';
 
@@ -26,7 +27,8 @@ class ButtonProgressNotifier extends ChangeNotifier {
 
   ///改变线性进度条属性
   void linear({
-    int? progress,
+    double? progress,
+    int? progressReserve,
     ProgressType? progressType,
     Color? foreground,
     Color? background,
@@ -42,6 +44,7 @@ class ButtonProgressNotifier extends ChangeNotifier {
     BorderRadius? borderRadius,
     double? width,
     double? padding,
+    double? indicatorRatio,
     BorderSide? borderSide,
     Gradient? foregroundGradient,
     Gradient? backgroundGradient,
@@ -56,6 +59,7 @@ class ButtonProgressNotifier extends ChangeNotifier {
     }
     _buttonProgress = LinearProgress(
       progress: progress??_buttonProgress.progress,
+      progressReserve: progressReserve??_buttonProgress.progressReserve,
       progressType: progressType??_buttonProgress.progressType,
       foreground: foreground??_buttonProgress.foreground,
       background: background??_buttonProgress.background,
@@ -69,6 +73,7 @@ class ButtonProgressNotifier extends ChangeNotifier {
       borderRadius: borderRadius??linearProgress?.borderRadius,
       width: width??linearProgress?.width,
       padding: padding??linearProgress?.padding??5,
+      indicatorRatio: indicatorRatio??linearProgress?.indicatorRatio??5,
       borderSide: borderSide??_buttonProgress.borderSide,
       foregroundGradient: foregroundGradient??_buttonProgress.foregroundGradient,
       backgroundGradient: backgroundGradient??_buttonProgress.backgroundGradient,
@@ -79,7 +84,8 @@ class ButtonProgressNotifier extends ChangeNotifier {
 
 
   ///改变圆形进度条属性
-  void circular({int? progress,
+  void circular({double? progress,
+    int? progressReserve,
     ProgressType? progressType,
     Color? foreground,
     Color? background,
@@ -94,9 +100,11 @@ class ButtonProgressNotifier extends ChangeNotifier {
     BorderRadius? borderRadius,
     double? radius,
     double? ratio,
+    bool? isArrow,
     bool? reverse,
     StrokeCap? strokeCap,
     double? startAngle,
+    double? sweepAngle,
     BorderSide? borderSide,
     Gradient? circularBackgroundGradient,
     Gradient? foregroundGradient,
@@ -111,6 +119,7 @@ class ButtonProgressNotifier extends ChangeNotifier {
     }
     _buttonProgress = CircularProgress(
       progress: progress??_buttonProgress.progress,
+      progressReserve: progressReserve??_buttonProgress.progressReserve,
       progressType: progressType??_buttonProgress.progressType,
       foreground: foreground??_buttonProgress.foreground,
       background: background??_buttonProgress.background,
@@ -125,11 +134,77 @@ class ButtonProgressNotifier extends ChangeNotifier {
       borderRadius: borderRadius??circularProgress?.borderRadius,
       radius: radius??circularProgress?.radius,
       ratio: ratio??circularProgress?.ratio,
+      isArrow: isArrow??circularProgress?.isArrow,
       reverse: reverse??circularProgress?.reverse??false,
       strokeCap: strokeCap??circularProgress?.strokeCap??StrokeCap.round,
       startAngle: startAngle??circularProgress?.startAngle,
+      sweepAngle: sweepAngle??circularProgress?.sweepAngle,
       borderSide: borderSide??_buttonProgress.borderSide,
       circularBackgroundGradient: circularBackgroundGradient??circularProgress?.circularBackgroundGradient,
+      foregroundGradient: foregroundGradient??_buttonProgress.foregroundGradient,
+      backgroundGradient: backgroundGradient??_buttonProgress.backgroundGradient,
+      shadows: shadows,
+    );
+    notifyListeners();
+  }
+
+  ///改变矩形进度属性
+  void rectangle({double? progress,
+    int? progressReserve,
+    ProgressType? progressType,
+    Color? foreground,
+    Color? background,
+    bool? isProgressOpacityAnim,
+    String? indeterminateText,
+    double? indicatorRatio,
+    TextStyle? textStyle,
+    String? prefix,
+    TextStyle? prefixStyle,
+    String? suffix,
+    TextStyle? suffixStyle,
+    double? size,
+    BorderRadius? borderRadius,
+    double? width,
+    double? height,
+    bool? reverse,
+    StrokeCap? strokeCap,
+    Color? progressBackground,
+    Gradient? progressBackgroundGradient,
+    double? startRatio,
+    BorderSide? borderSide,
+    Gradient? foregroundGradient,
+    Gradient? backgroundGradient,
+    List<BoxShadow>? shadows}){
+    if(_isDisposed){
+      return;
+    }
+    RectangleProgress? rectangleProgress;
+    if(_buttonProgress is RectangleProgress){
+      rectangleProgress = _buttonProgress as RectangleProgress;
+    }
+    _buttonProgress = RectangleProgress(
+      progress: progress??_buttonProgress.progress,
+      progressReserve: progressReserve??_buttonProgress.progressReserve,
+      progressType: progressType??_buttonProgress.progressType,
+      foreground: foreground??_buttonProgress.foreground,
+      background: background??_buttonProgress.background,
+      isProgressOpacityAnim: isProgressOpacityAnim??_buttonProgress.isProgressOpacityAnim,
+      textStyle: textStyle??_buttonProgress.textStyle,
+      prefix: prefix??_buttonProgress.prefix,
+      prefixStyle: prefixStyle??_buttonProgress.prefixStyle,
+      suffix: suffix??_buttonProgress.suffix,
+      suffixStyle: suffixStyle??_buttonProgress.suffixStyle,
+      indeterminateText: indeterminateText??rectangleProgress?.indeterminateText,
+      indicatorRatio: indicatorRatio??rectangleProgress?.indicatorRatio,
+      size: size??rectangleProgress?.size??5,
+      width: width??rectangleProgress?.width,
+      height: height??rectangleProgress?.height,
+      borderRadius: borderRadius??rectangleProgress?.borderRadius,
+      reverse: reverse??rectangleProgress?.reverse??false,
+      strokeCap: strokeCap??rectangleProgress?.strokeCap??StrokeCap.round,
+      borderSide: borderSide??_buttonProgress.borderSide,
+      progressBackground: progressBackground??rectangleProgress?.progressBackground,
+      progressBackgroundGradient: progressBackgroundGradient??rectangleProgress?.progressBackgroundGradient,
       foregroundGradient: foregroundGradient??_buttonProgress.foregroundGradient,
       backgroundGradient: backgroundGradient??_buttonProgress.backgroundGradient,
       shadows: shadows,
