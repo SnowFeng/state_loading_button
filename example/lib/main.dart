@@ -93,11 +93,13 @@ class _MyAppState extends State<MyApp> {
                       background: Theme.of(context).scaffoldBackgroundColor);
                 case 'cancel':
                   return RectangleProgress(
+                    width: 100,
+                    height: 50,
                     progressType: ProgressType.determinate,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     indeterminateText: '无进度值',
                     textStyle: const TextStyle(color: Colors.white,fontSize: 12),
-                    size: 5,
+                    size: 7,
                     progressBackground: Colors.purpleAccent,
                   );
                 case 'complete':
