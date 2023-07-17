@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:state_loading_button/src/progress/circular_progress.dart';
-import 'package:state_loading_button/src/progress/linear_progress.dart';
-import 'package:state_loading_button/src/progress/rectangle_progress.dart';
-
-import '../progress/button_progress.dart';
+import 'package:state_loading_button/state_loading_button.dart';
 
 class ButtonProgressNotifier extends ChangeNotifier {
 
@@ -77,7 +73,7 @@ class ButtonProgressNotifier extends ChangeNotifier {
       borderSide: borderSide??_buttonProgress.borderSide,
       foregroundGradient: foregroundGradient??_buttonProgress.foregroundGradient,
       backgroundGradient: backgroundGradient??_buttonProgress.backgroundGradient,
-      shadows: shadows,
+      shadows: shadows??_buttonProgress.shadows,
     );
     notifyListeners();
   }
@@ -143,7 +139,7 @@ class ButtonProgressNotifier extends ChangeNotifier {
       circularBackgroundGradient: circularBackgroundGradient??circularProgress?.circularBackgroundGradient,
       foregroundGradient: foregroundGradient??_buttonProgress.foregroundGradient,
       backgroundGradient: backgroundGradient??_buttonProgress.backgroundGradient,
-      shadows: shadows,
+      shadows: shadows??_buttonProgress.shadows,
     );
     notifyListeners();
   }
@@ -207,7 +203,71 @@ class ButtonProgressNotifier extends ChangeNotifier {
       progressBackgroundGradient: progressBackgroundGradient??rectangleProgress?.progressBackgroundGradient,
       foregroundGradient: foregroundGradient??_buttonProgress.foregroundGradient,
       backgroundGradient: backgroundGradient??_buttonProgress.backgroundGradient,
-      shadows: shadows,
+      shadows: shadows??_buttonProgress.shadows,
+    );
+    notifyListeners();
+  }
+
+  ///改变正多边形环绕进度属性
+  void polygon({double? progress,
+    int? progressReserve,
+    ProgressType? progressType,
+    Color? foreground,
+    Color? background,
+    bool? isProgressOpacityAnim,
+    String? indeterminateText,
+    double? indicatorRatio,
+    TextStyle? textStyle,
+    String? prefix,
+    TextStyle? prefixStyle,
+    String? suffix,
+    TextStyle? suffixStyle,
+    double? size,
+    double? borderRadius,
+    double? width,
+    int? side,
+    bool? reverse,
+    StrokeCap? strokeCap,
+    Color? progressBackground,
+    Gradient? progressBackgroundGradient,
+    double? startRatio,
+    BorderSide? borderSide,
+    Gradient? foregroundGradient,
+    Gradient? backgroundGradient,
+    List<BoxShadow>? shadows}){
+    if(_isDisposed){
+      return;
+    }
+    PolygonProgress? polygonProgress;
+    if(_buttonProgress is PolygonProgress){
+      polygonProgress = _buttonProgress as PolygonProgress;
+    }
+    _buttonProgress = PolygonProgress(
+      progress: progress??_buttonProgress.progress,
+      progressReserve: progressReserve??_buttonProgress.progressReserve,
+      progressType: progressType??_buttonProgress.progressType,
+      foreground: foreground??_buttonProgress.foreground,
+      background: background??_buttonProgress.background,
+      isProgressOpacityAnim: isProgressOpacityAnim??_buttonProgress.isProgressOpacityAnim,
+      textStyle: textStyle??_buttonProgress.textStyle,
+      prefix: prefix??_buttonProgress.prefix,
+      prefixStyle: prefixStyle??_buttonProgress.prefixStyle,
+      suffix: suffix??_buttonProgress.suffix,
+      suffixStyle: suffixStyle??_buttonProgress.suffixStyle,
+      indeterminateText: indeterminateText??polygonProgress?.indeterminateText,
+      indicatorRatio: indicatorRatio??polygonProgress?.indicatorRatio,
+      size: size??polygonProgress?.size??5,
+      width: width??polygonProgress?.width,
+      side: side??polygonProgress?.side??3,
+      borderRadius: borderRadius??polygonProgress?.borderRadius,
+      reverse: reverse??polygonProgress?.reverse??false,
+      strokeCap: strokeCap??polygonProgress?.strokeCap??StrokeCap.round,
+      borderSide: borderSide??_buttonProgress.borderSide,
+      progressBackground: progressBackground??polygonProgress?.progressBackground,
+      progressBackgroundGradient: progressBackgroundGradient??polygonProgress?.progressBackgroundGradient,
+      foregroundGradient: foregroundGradient??_buttonProgress.foregroundGradient,
+      backgroundGradient: backgroundGradient??_buttonProgress.backgroundGradient,
+      shadows: shadows??_buttonProgress.shadows,
     );
     notifyListeners();
   }

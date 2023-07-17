@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:state_loading_button/src/progress/circular_progress.dart';
 import 'package:state_loading_button/src/progress/linear_progress.dart';
 import 'package:state_loading_button/src/progress/rectangle_progress.dart';
+import 'package:state_loading_button/state_loading_button.dart';
 
 import 'animated_button_painter.dart';
 import 'notifier/button_progress_notifier.dart';
@@ -237,6 +238,14 @@ class _AnimatedButtonState extends State<AnimatedButton>
         endHeight = rectangleProgress.height!;
         progressRadius = rectangleProgress.borderRadius??BorderRadius.all(Radius.zero);
       }
+      if(progress is PolygonProgress){//正多边形进度框
+        PolygonProgress polygonProgress = progress as PolygonProgress;
+        if(polygonProgress.width==null){//宽未设置时，使用button宽
+          progress = polygonProgress= polygonProgress.copyWith(width: button.width);
+        }
+        endWidth = polygonProgress.width!;
+        endHeight = polygonProgress.width!;
+      }
     } else {
       LinearProgress linearProgress = progress as LinearProgress;
       if(linearProgress.width == null){//未设置宽度时：linear类型使用button的宽度
@@ -329,7 +338,7 @@ class _AnimatedButtonState extends State<AnimatedButton>
   }
 
   List<BoxShadow>? _buildBoxShadows() {
-    if (button.shadows == null && progress.shadows == null) {
+    if (button.shadows == null && progress.shadows == null||(progress is PolygonProgress&&button.status == AnimatedButtonStatus.loading)) {
       return null;
     }
     return BoxShadow.lerpList(

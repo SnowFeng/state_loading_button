@@ -48,6 +48,8 @@ class _MyAppState extends State<MyApp> {
                   return _complete;
                 case 'error':
                   return _error;
+                case 'polygon':
+                  return _polygon;
               }
               return _normal;
             },
@@ -118,12 +120,26 @@ class _MyAppState extends State<MyApp> {
                       size: 8,
                       borderRadius: BorderRadius.circular(5),
                       radius: 40);
+                case 'polygon':
+                  return PolygonProgress(
+                    width: 200,
+                    progressType: ProgressType.indeterminate,
+                    borderRadius: 15,
+                    indeterminateText: '无进度值',
+                    textStyle: const TextStyle(color: Colors.white,fontSize: 12),
+                    size: 7,
+                    side: 5,
+                    shadows: [const BoxShadow(color: Colors.black,offset: Offset(0, 2),blurRadius: 5)],
+                    borderSide: const BorderSide(width: 3,color: Colors.greenAccent),
+                    progressBackground: Colors.purpleAccent,
+                  );
                 default:
                   return progress;
               }
             },
             stateNotifier: _statusNotifier,
             buttonProgressNotifier: _progressNotifier,
+            loadingDuration: const Duration(milliseconds: 2000),
             onTap: (button) {
               switch (button.state) {
                 case 'normal':
@@ -169,27 +185,33 @@ class _MyAppState extends State<MyApp> {
                 case 'cancel':
                   _statusNotifier.value='loading';
                   double progress = 0;
-                  Timer.periodic(const Duration(milliseconds: 10), (timer) {
+                  Timer.periodic(const Duration(milliseconds: 30), (timer) {
                     progress+=0.1;
                     _progressNotifier.rectangle(
                         progress: progress
                     );
                     if (progress > 100) {
-                      _statusNotifier.value='error';
+                      _statusNotifier.value='polygon';
                       timer.cancel();
                     }
                   });
                   break;
                 case 'complete':
                   _statusNotifier.value='loading';
-                  Future.delayed(const Duration(milliseconds: 3000), () {
+                  Future.delayed(const Duration(milliseconds: 4000), () {
                     _statusNotifier.value='normal';
                   });
                   break;
                 case 'error':
                   _statusNotifier.value='loading';
-                  Future.delayed(const Duration(milliseconds: 3000), () {
+                  Future.delayed(const Duration(milliseconds: 4000), () {
                     _statusNotifier.value='complete';
+                  });
+                  break;
+                case 'polygon':
+                  _statusNotifier.value='loading';
+                  Future.delayed(const Duration(milliseconds: 4000), () {
+                    _statusNotifier.value='error';
                   });
                   break;
               }
@@ -241,6 +263,7 @@ class _MyAppState extends State<MyApp> {
       text: 'Canceled',
       textStyle: TextStyle(fontSize: 14.0, color: Colors.white),
       buttonColor: Colors.grey,
+      shadows: [BoxShadow(color: Colors.black,offset: Offset(0, 2),blurRadius: 5)],
       borderRadius: BorderRadius.all(Radius.circular(12)),
   );
 
@@ -278,5 +301,17 @@ class _MyAppState extends State<MyApp> {
       color: Colors.blue,
       blurRadius: 8
   )]
+  );
+
+  ///多边形
+  static const ButtonStatus _polygon = ButtonStatus(
+    width: 200,
+    state: 'polygon',
+    status: AnimatedButtonStatus.button,
+    text: 'Polygon',
+    textStyle: TextStyle(fontSize: 14.0, color: Colors.white),
+    buttonColor: Colors.indigoAccent,
+    shadows: [BoxShadow(color: Colors.greenAccent,offset: Offset(0, 2),blurRadius: 5)],
+    borderRadius: BorderRadius.all(Radius.circular(12)),
   );
 }

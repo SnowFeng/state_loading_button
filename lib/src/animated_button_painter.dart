@@ -1,9 +1,8 @@
 import 'dart:math';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:state_loading_button/src/progress/circular_progress.dart';
 import 'package:state_loading_button/src/progress/linear_progress.dart';
+import 'package:state_loading_button/src/progress/polygon_progress.dart';
 import 'package:state_loading_button/src/progress/rectangle_progress.dart';
 
 import 'progress/button_progress.dart';
@@ -53,6 +52,8 @@ class AnimatedButtonPainter extends CustomPainter {
       } else if (buttonProgress is RectangleProgress) {
         _drawRectangleProgress(
             canvas, size, buttonProgress as RectangleProgress);
+      } else if (buttonProgress is PolygonProgress) {
+        _drawPolygonProgress(canvas, size, buttonProgress as PolygonProgress);
       } else {
         _drawLinearProgress(canvas, size, buttonProgress as LinearProgress);
       }
@@ -309,10 +310,271 @@ class AnimatedButtonPainter extends CustomPainter {
     }
   }
 
+  ///构建带圆角的多边形路径
+  List _buildRoundedCornerPath(List<Offset> points, double radius) {
+    Path path = Path();
+
+    double perimeter=0;
+
+    for (int i = 0; i < points.length; i++) {
+      Point<double> angularPoint = Point(points[i].dx, points[i].dy);
+      Point<double> p1 = Point(points[i == 0 ? points.length - 1 : i - 1].dx,
+          points[i == 0 ? points.length - 1 : i - 1].dy);
+      Point<double> p2 = Point(points[i == points.length - 1 ? 0 : i + 1].dx,
+          points[i == points.length - 1 ? 0 : i + 1].dy);
+
+      //Vector 1
+      double dx1 = angularPoint.x - p1.x;
+      double dy1 = angularPoint.y - p1.y;
+
+      //Vector 2
+      double dx2 = angularPoint.x - p2.x;
+      double dy2 = angularPoint.y - p2.y;
+
+      //Angle between vector 1 and vector 2 divided by 2
+      double angle = (atan2(dy1, dx1) - atan2(dy2, dx2)) / 2;
+
+      // The length of segment between angular point and the
+      // points of intersection with the circle of a given radius
+      double tanV = tan(angle).abs();
+      double segment = radius / tanV;
+
+      //Check the segment
+      double length1 = _getLength(dx1, dy1);
+      double length2 = _getLength(dx2, dy2);
+
+      double length = min(length1, length2);
+
+      if (segment > length) {
+        segment = length;
+        radius = length * tanV;
+      }
+
+      // Points of intersection are calculated by the proportion between
+      // the coordinates of the vector, length of vector and the length of the segment.
+      var p1Cross =
+          _getProportionPoint(angularPoint, segment, length1, dx1, dy1, false);
+      var p2Cross =
+          _getProportionPoint(angularPoint, segment, length2, dx2, dy2, false);
+
+      // Calculation of the coordinates of the circle
+      // center by the addition of angular vectors.
+      double dx = angularPoint.x * 2 - p1Cross.x - p2Cross.x;
+      double dy = angularPoint.y * 2 - p1Cross.y - p2Cross.y;
+
+      double L = _getLength(dx, dy);
+      double d = _getLength(segment, radius);
+
+      var circlePoint = _getProportionPoint(angularPoint, d, L, dx, dy, false);
+
+      //StartAngle and EndAngle of arc
+      var startAngle =
+          atan2(p1Cross.y - circlePoint.y, p1Cross.x - circlePoint.x);
+      var endAngle =
+          atan2(p2Cross.y - circlePoint.y, p2Cross.x - circlePoint.x);
+
+      //Sweep angle
+      var sweepAngle = endAngle - startAngle;
+
+      //Some additional checks
+      if (sweepAngle < 0) {
+        sweepAngle = 2*pi+sweepAngle;
+      }
+
+      var p1Start = _getProportionPoint(p1, segment, length1, dx1, dy1, true);
+
+      // var p2Start = _getProportionPoint(p2, segment, length2, dx2, dy2, true);
+
+      perimeter += sqrt(pow(p1Cross.x-p1Start.x, 2)+pow(p1Cross.y-p1Start.y, 2));
+
+      if (i == 0) {
+        path.moveTo(p1Start.x, p1Start.y);
+      }
+
+      var left = circlePoint.x - radius;
+      var top = circlePoint.y - radius;
+      var diameter = 2 * radius;
+      perimeter+=sweepAngle*radius;
+      path.arcTo(Rect.fromLTWH(left, top, diameter, diameter), startAngle,
+          sweepAngle,false);
+    }
+
+    return [path,perimeter];
+  }
+
+  double _getLength(double dx, double dy) {
+    return sqrt(dx * dx + dy * dy);
+  }
+
+  Point<double> _getProportionPoint(Point<double> point, double segment,
+      double length, double dx, double dy, bool isStart) {
+    double factor = segment / length;
+    if (isStart) {
+      return Point<double>(point.x + dx * factor, point.y + dy * factor);
+    }
+    return Point<double>(point.x - dx * factor, point.y - dy * factor);
+  }
+
+  void _drawPolygonProgress(
+      Canvas canvas, Size size, PolygonProgress buttonProgress) {
+    bool reverse = buttonProgress.reverse;
+
+    bool indeterminate =
+        buttonProgress.progressType == ProgressType.indeterminate;
+
+    double? cornerRadius = buttonProgress.borderRadius;
+
+    //边数
+    int count =buttonProgress.side;
+
+    double indicatorWidth =
+        (buttonProgress.indicatorRatio ?? 1 / 3) * size.width;
+
+    String text = '';
+
+    progressPaint.style = PaintingStyle.stroke;
+    progressPaint.strokeWidth = buttonProgress.size;
+    double radius = size.width / 2;
+    //不带圆角的周长
+    double perimeter = 2 * count * radius * sin(pi / count);
+
+    Path path = Path();
+    List<Offset> points = [];
+    points.add(Offset(radius * cos(pi / count), radius * sin(pi / count)));
+    //拿到多边形顶点集合
+    for (int i = 2; i <= count * 2; i++) {
+      if (i.isOdd) {
+        double x = radius * cos(pi / count * i);
+        double y = radius * sin(pi / count * i);
+        points.add(Offset(x, y));
+      }
+    }
+    if (cornerRadius != null && cornerRadius > 0) {
+      List result=_buildRoundedCornerPath(points, cornerRadius);
+      path = result[0];
+      perimeter=result[1];
+    } else {
+      path.addPolygon(points, true);
+    }
+    //旋转平移处理
+    Matrix4 m4 = Matrix4.translationValues(radius, size.height / 2, 0);
+    if (count.isOdd) {
+      //奇数边数才旋转
+      m4.setRotationZ(pi / count + pi / 2 * 3);
+    }
+    path = path.transform(m4.storage);
+
+    //进度长度
+    double distance =
+    indeterminate ? perimeter * value : perimeter * (progress / 100);
+
+    //画阴影
+    _drawShadowsPath(canvas, path, buttonProgress.shadows);
+
+    //画边框
+    if (buttonStatus.borderSide != null &&
+        buttonStatus.borderSide != BorderSide.none) {
+      buttonPaint.style = PaintingStyle.stroke;
+      buttonPaint.strokeWidth = buttonStatus.borderSide!.width+buttonProgress.size;
+      buttonPaint.color = buttonStatus.borderSide!.color;
+      buttonPaint.shader = null;
+      canvas.drawPath(path, buttonPaint);
+    }
+
+    buttonPaint.style = PaintingStyle.fill;
+    buttonPaint.color = buttonStatus.buttonColor;
+    buttonPaint.shader = buttonStatus.gradient?.createShader(path.getBounds());
+
+    canvas.drawPath(path, buttonPaint); //画控件背景
+    //画进度条背景
+    if (buttonProgress.progressBackgroundGradient != null) {
+      progressPaint.shader = buttonProgress.progressBackgroundGradient!
+          .createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      canvas.drawPath(path, progressPaint);
+    } else if (buttonProgress.progressBackground != null) {
+      progressPaint.color =
+          buttonProgress.progressBackground!.withOpacity(statusValue);
+      canvas.drawPath(path, progressPaint);
+    }
+    if (buttonProgress.strokeCap == StrokeCap.square) {
+      //不用这个，没啥用
+      progressPaint.strokeCap = StrokeCap.butt;
+    } else {
+      progressPaint.strokeCap = buttonProgress.strokeCap;
+    }
+
+    progressPaint.color = buttonProgress.foreground.withOpacity(statusValue);
+
+    if (reverse) {
+      //反转
+      path.computeMetrics().forEach((element) {
+        double start = element.length - distance;
+        double end = element.length;
+        path = Path.from(element.extractPath(start, end));
+      });
+    } else {
+      path.computeMetrics().forEach((element) {
+        double start = 0;
+        double end = distance;
+        path = Path.from(element.extractPath(start, end));
+      });
+    }
+    //无进度类型
+    if (indeterminate) {
+      text = buttonProgress.indeterminateText ?? '';
+      path.computeMetrics().forEach((element) {
+        //截取固定长度的path
+        double start = reverse ? 0 : element.length - indicatorWidth;
+        double end = reverse ? indicatorWidth : element.length;
+        path = Path.from(element.extractPath(start, end));
+      });
+    } else {
+      text = '${progress.toStringAsFixed(buttonProgress.progressReserve)}%';
+    }
+    progressPaint.shader =
+        buttonProgress.foregroundGradient?.createShader(path.getBounds());
+    canvas.drawPath(path, progressPaint);
+    //进度文字
+    TextPainter textPainter = TextPainter();
+    textPainter.textDirection = TextDirection.ltr;
+    List<TextSpan> spanChildren = [
+      TextSpan(
+          text: text,
+          style: buttonProgress.textStyle.apply(
+              color: buttonProgress.textStyle.color?.withOpacity(statusValue),
+              fontSizeFactor: statusValue))
+    ];
+    if (buttonProgress.prefix != null) {
+      spanChildren.insert(
+          0,
+          TextSpan(
+              text: buttonProgress.prefix,
+              style: buttonProgress.prefixStyle?.apply(
+                  color: buttonProgress.prefixStyle?.color
+                      ?.withOpacity(statusValue),
+                  fontSizeFactor: statusValue)));
+    }
+    if (buttonProgress.suffix != null) {
+      spanChildren.add(TextSpan(
+          text: buttonProgress.suffix,
+          style: buttonProgress.suffixStyle?.apply(
+              color:
+                  buttonProgress.suffixStyle?.color?.withOpacity(statusValue),
+              fontSizeFactor: statusValue)));
+    }
+    textPainter.text = TextSpan(children: spanChildren);
+    textPainter.textAlign = TextAlign.center;
+    textPainter.layout();
+    double textStarPositionX = (size.width - textPainter.size.width) / 2;
+    double textStarPositionY = (size.height - textPainter.size.height) / 2;
+    textPainter.paint(canvas, Offset(textStarPositionX, textStarPositionY));
+  }
+
   ///画矩形路径的进度条
   void _drawRectangleProgress(
       Canvas canvas, Size size, RectangleProgress buttonProgress) {
-    BorderRadius? borderRadius = _buildRectBorderRadius(buttonStatus.borderRadius,size);
+    BorderRadius? borderRadius =
+        _buildRectBorderRadius(buttonStatus.borderRadius, size);
     bool reverse = buttonProgress.reverse;
     bool indeterminate =
         buttonProgress.progressType == ProgressType.indeterminate;
@@ -385,33 +647,34 @@ class AnimatedButtonPainter extends CustomPainter {
     double bottomLength = size.width - bottomLeftX - bottomRightX;
     double bottomEnd = rightEnd + bottomLength + bottomLeftArc;
     double leftLength = size.height - topLeftX - bottomLeftX;
-    double leftEnd = bottomEnd + leftLength + topLeftArc;
 
     if (indeterminate) {
       //无进度类型首尾衔接
       if (distance < indicatorWidth) {
         if (indicatorWidth - topLeftArc > distance) {
           double relative = indicatorWidth - topLeftArc - distance;
-          if(relative>leftLength){
-            double relativeLeft=relative-leftLength;
-            if(bottomLeft!=null){
-              double radio = relativeLeft/ bottomLeftArc;
-              if(relativeLeft>bottomLeftArc){
-                path.moveTo(relativeLeft-bottomLeftArc+bottomLeftX, size.height);
-                path.relativeLineTo(bottomLeftArc-relativeLeft, 0);
-              }else{
-                path.moveTo(bottomLeftX-bottomLeftX*sin(radio), size.height-bottomLeftX*cos(radio));
+          if (relative > leftLength) {
+            double relativeLeft = relative - leftLength;
+            if (bottomLeft != null) {
+              double radio = relativeLeft / bottomLeftArc;
+              if (relativeLeft > bottomLeftArc) {
+                path.moveTo(
+                    relativeLeft - bottomLeftArc + bottomLeftX, size.height);
+                path.relativeLineTo(bottomLeftArc - relativeLeft, 0);
+              } else {
+                path.moveTo(bottomLeftX - bottomLeftX * sin(radio),
+                    size.height - bottomLeftX * cos(radio));
               }
               path.arcTo(
                   _buildRectangleRadiusRect(bottomLeft, 2, size),
                   pi - 0.5 * pi * (radio > 1 ? 1 : radio),
                   0.5 * pi * (radio > 1 ? 1 : radio),
                   false);
-            }else{
+            } else {
               path.moveTo(relativeLeft, size.height);
               path.relativeLineTo(-relativeLeft, 0);
             }
-          }else{
+          } else {
             path.moveTo(0, relative + topLeftX);
             path.relativeLineTo(0, -relative);
           }
@@ -598,6 +861,9 @@ class AnimatedButtonPainter extends CustomPainter {
 
   ///画背景
   void _drawBackground(Canvas canvas, Size size) {
+    if(buttonProgress is PolygonProgress&&buttonStatus.status==AnimatedButtonStatus.loading){///多边形类型不需要背景
+      return;
+    }
     //画圆角
     RRect rRect = _buildRRectFormBorderRadius(
         buttonStatus.borderRadius, 0, 0, size.width, size.height, Radius.zero);
@@ -671,11 +937,10 @@ class AnimatedButtonPainter extends CustomPainter {
     return path;
   }
 
-  ///绘制带阴影的RRect
-  void _drawShadowsRRect(
-      Canvas canvas, RRect rRect, List<BoxShadow>? shadows, Paint paint) {
+  ///绘制带阴影的Path
+  void _drawShadowsPath(
+      Canvas canvas, Path path, List<BoxShadow>? shadows) {
     if (shadows != null) {
-      Path path = Path()..addRRect(rRect);
       for (final BoxShadow shadow in shadows) {
         final Paint shadowPainter = shadow.toPaint();
         if (shadow.spreadRadius == 0) {
@@ -693,7 +958,7 @@ class AnimatedButtonPainter extends CustomPainter {
         }
       }
     }
-    canvas.drawRRect(rRect, paint);
+    // canvas.drawRRect(rRect, paint);
   }
 
   @override

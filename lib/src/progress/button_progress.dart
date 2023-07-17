@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:state_loading_button/src/progress/circular_progress.dart';
+import 'package:state_loading_button/src/progress/polygon_progress.dart';
 import 'package:state_loading_button/src/progress/rectangle_progress.dart';
 
 enum ProgressType {
@@ -51,6 +52,6 @@ abstract class ButtonProgress {
   bool get isIndeterminate => progressType == ProgressType.indeterminate;
 
   ///是否为圆形或矩形进度
-  bool get isBoxProgress => this is CircularProgress||this is RectangleProgress;
+  bool get isBoxProgress => this is CircularProgress||this is RectangleProgress || this is PolygonProgress;
 
 }
