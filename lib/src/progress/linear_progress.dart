@@ -10,6 +10,7 @@ class LinearProgress extends ButtonProgress {
   final BorderRadius? borderRadius; //进度条及背景圆角
   final double padding; //文字与进度条右边间距
   final double? indicatorRatio; //无进度类型，进度长度比例(默认取1/3)
+  final bool reverse; //是否反向
 
   const LinearProgress({
     this.isTextInner = true,
@@ -19,6 +20,7 @@ class LinearProgress extends ButtonProgress {
     this.borderRadius,
     this.padding = 5,
     this.indicatorRatio,
+    this.reverse = false,
     super.progress,
     super.progressReserve,
     super.progressType,
@@ -55,6 +57,7 @@ class LinearProgress extends ButtonProgress {
     double? width,
     double? padding,
     double? indicatorRatio,
+    bool? reverse,
     BorderSide? borderSide,
     Gradient? foregroundGradient,
     Gradient? backgroundGradient,
@@ -78,6 +81,7 @@ class LinearProgress extends ButtonProgress {
       width: width ?? this.width,
       padding: padding ?? this.padding,
       indicatorRatio: indicatorRatio ?? this.indicatorRatio,
+      reverse: reverse ?? this.reverse,
       borderRadius: borderRadius ?? this.borderRadius,
       borderSide: borderSide?? this.borderSide,
       foregroundGradient: foregroundGradient  ??this.foregroundGradient,

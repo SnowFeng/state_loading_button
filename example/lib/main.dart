@@ -78,10 +78,10 @@ class _MyAppState extends State<MyApp> {
                 case 'paused':
                   return CircularProgress(
                       textStyle: const TextStyle(color: Colors.redAccent, fontSize: 8),
-                      prefix: '前缀\n',
+                      prefix: '前缀很长很长\n',
                       prefixStyle:
-                          const TextStyle(color: Colors.black, fontSize: 8),
-                      suffix: '\n后缀',
+                          const TextStyle(color: Colors.white, fontSize: 8),
+                      suffix: '\n后缀很长很长',
                       suffixStyle: const TextStyle(
                           color: Colors.orangeAccent, fontSize: 8),
                       progressType:
@@ -109,7 +109,7 @@ class _MyAppState extends State<MyApp> {
                       progressType:
                           ProgressType.indeterminate,
                       shadows: [BoxShadow(color: Colors.black,offset: Offset(0, 2),blurRadius: 5)],
-                      foregroundGradient: LinearGradient(colors: [Colors.yellow,Colors.red]),
+                      foregroundGradient: LinearGradient(colors: [Colors.red,Colors.yellow]),
                       height: 10);
                 case 'error':
                   return CircularProgress(
