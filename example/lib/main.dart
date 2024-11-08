@@ -122,13 +122,13 @@ class _MyAppState extends State<MyApp> {
                       radius: 40);
                 case 'polygon':
                   return PolygonProgress(
-                    width: 200,
-                    progressType: ProgressType.indeterminate,
+                    width: 150,
+                    progressType: ProgressType.determinate,
                     borderRadius: 15,
-                    indeterminateText: '无进度值',
+                    // indeterminateText: '无进度值',
                     textStyle: const TextStyle(color: Colors.white,fontSize: 12),
-                    size: 7,
-                    side: 5,
+                    size: 10,
+                    side: 6,
                     shadows: [const BoxShadow(color: Colors.black,offset: Offset(0, 2),blurRadius: 5)],
                     borderSide: const BorderSide(width: 3,color: Colors.greenAccent),
                     progressBackground: Colors.purpleAccent,
@@ -145,8 +145,8 @@ class _MyAppState extends State<MyApp> {
                 case 'normal':
                   _statusNotifier.value='loading';
                   double progress = 0;
-                  Timer.periodic(const Duration(milliseconds: 30), (timer) {
-                    progress++;
+                  Timer.periodic(const Duration(milliseconds: 3), (timer) {
+                    progress+=0.1;
                     _progressNotifier.linear(
                         progress: progress,
                         foreground: Color.lerp(
@@ -185,8 +185,8 @@ class _MyAppState extends State<MyApp> {
                 case 'cancel':
                   _statusNotifier.value='loading';
                   double progress = 0;
-                  Timer.periodic(const Duration(milliseconds: 30), (timer) {
-                    progress+=0.1;
+                  Timer.periodic(const Duration(milliseconds: 15), (timer) {
+                    progress+=0.5;
                     _progressNotifier.rectangle(
                         progress: progress
                     );
@@ -205,13 +205,24 @@ class _MyAppState extends State<MyApp> {
                 case 'error':
                   _statusNotifier.value='loading';
                   Future.delayed(const Duration(milliseconds: 4000), () {
-                    _statusNotifier.value='complete';
+                    _statusNotifier.value='polygon';
                   });
                   break;
                 case 'polygon':
                   _statusNotifier.value='loading';
-                  Future.delayed(const Duration(milliseconds: 4000), () {
-                    _statusNotifier.value='error';
+                  // Future.delayed(const Duration(milliseconds: 4000), () {
+                  //   _statusNotifier.value='complete';
+                  // });
+                  double progress = 0;
+                  Timer.periodic(const Duration(milliseconds: 40), (timer) {
+                    progress+=0.5;
+                    _progressNotifier.polygon(
+                        progress: progress
+                    );
+                    if (progress > 100) {
+                      _statusNotifier.value='complete';
+                      timer.cancel();
+                    }
                   });
                   break;
               }

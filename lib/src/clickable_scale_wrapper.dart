@@ -21,6 +21,7 @@ class _ClickableScaleWrapperState extends State<ClickableScaleWrapper>
 
   late AnimationController _controller;
   late AnimationController _decorationController;
+  late Animation<double> animation;
   DateTime? tapTime;
   bool deferrable = false;
 
@@ -32,12 +33,13 @@ class _ClickableScaleWrapperState extends State<ClickableScaleWrapper>
       duration: _duration,
       lowerBound: 0.0,
       upperBound: 0.05,
-    )..addListener(() {
-        setState(() {});
-      });
+    );
+    animation = CurvedAnimation(parent: _controller, curve: Curves.linear);
+    animation.addListener(() {
+      setState(() {});
+    });
     _decorationController = AnimationController(vsync: this,duration: _duration,upperBound: widget.tapDecorationScale);
   }
-
   @override
   void dispose() {
     _controller.dispose();
@@ -104,7 +106,7 @@ class _ClickableScaleWrapperState extends State<ClickableScaleWrapper>
       onTap: _onTap,
       onTapCancel: _onTapCancel,
       child: Transform.scale(
-        scale: 1 - _controller.value,
+        scale: 1 + animation.value,
         child: widget.child,
       ),
     );
